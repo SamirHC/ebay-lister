@@ -1,6 +1,7 @@
 from openai import OpenAI
 from dotenv import dotenv_values
-from model import Model, SystemMessage
+from chatgpt.model import Model, SystemMessage
+import os
 
 config = dotenv_values(".env")
 client = OpenAI(api_key=config["OPENAI_API_KEY"])
@@ -8,7 +9,14 @@ client = OpenAI(api_key=config["OPENAI_API_KEY"])
 MAX_TOKENS = 300
 
 
-def get_chatgpt_4o_response(prompt, base64_image, system_msg=SystemMessage.DEFAULT):
+def log_response(response):
+    with open(os.path.join(os.getcwd(), "log.txt"), 'a') as file:
+        file.write(str(response))
+
+
+def get_chatgpt_4o_response(
+        prompt, base64_image, system_msg=SystemMessage.DEFAULT
+):
     response = client.chat.completions.create(
         model=Model.GPT_4_O,
         messages=[
@@ -28,4 +36,6 @@ def get_chatgpt_4o_response(prompt, base64_image, system_msg=SystemMessage.DEFAU
         ],
         max_tokens=MAX_TOKENS,
     )
-    return response["choices"][0]["message"]["content"]
+
+    log_response(response)
+    return response

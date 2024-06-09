@@ -12,6 +12,7 @@ MAX_TOKENS = 300
 def log_response(response):
     with open(os.path.join(os.getcwd(), "log.txt"), 'a') as file:
         file.write(str(response))
+        file.write("\n")
 
 
 def get_chatgpt_4o_response(

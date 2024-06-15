@@ -2,17 +2,45 @@ import requests
 import threading
 import webbrowser
 import flask
+import json
 from dotenv import dotenv_values
+
+import boto3
+from botocore.exceptions import ClientError
+
+
+def get_secret():
+    secret_name = "sbx/ebay-lister/.env"
+    region_name = "eu-north-1"
+
+    # Create a Secrets Manager client
+    client = boto3.client(
+        service_name='secretsmanager',
+        region_name=region_name
+    )
+
+    try:
+        get_secret_value_response = client.get_secret_value(
+            SecretId=secret_name
+        )
+    except ClientError as e:
+        # For a list of exceptions thrown, see
+        # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+        raise e
+
+    secret = get_secret_value_response['SecretString']
+    return json.loads(secret)
 
 
 app = flask.Flask(__name__)
+secret = get_secret()
 config = dotenv_values(".env")
 
-# Replace with your credentials
-REDIRECT_URI = config["REDIRECT_URI"]
-APP_ID = config["APP_ID"]
-CERT_ID = config["CERT_ID"]
-DEV_ID = config["DEV_ID"]
+APP_ID = secret["APP_ID_SBX"]
+CERT_ID = secret["CERT_ID_SBX"]
+DEV_ID = secret["DEV_ID_SBX"]
+
+REDIRECT_URI = "Samir_Chowdhury-SamirCho-itemtr-hdghgnj"
 SCOPE = "https://api.ebay.com/oauth/api_scope/sell.inventory"
 
 AUTH_URL = "https://auth.sandbox.ebay.com/oauth2/authorize"

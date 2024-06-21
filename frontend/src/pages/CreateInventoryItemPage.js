@@ -4,7 +4,7 @@ const CreateInventoryItemPage = () => {
   const [message, setMessage] = useState('');
 
   const createItem = () => {
-    fetch('http://localhost:5000/api/create_or_replace_inventory_item',
+    fetch('https://samirchowdhury.co.uk/api/create_or_replace_inventory_item',
       {method: 'PUT'}
     )
       .then(response => response.json())

@@ -1,6 +1,4 @@
 import requests
-import threading
-import webbrowser
 import flask
 import json
 from dotenv import dotenv_values
@@ -31,8 +29,6 @@ def get_secret():
     secret = get_secret_value_response['SecretString']
     return json.loads(secret)
 
-
-app = flask.Flask(__name__)
 secret = get_secret()
 config = dotenv_values(".env")
 
@@ -46,21 +42,10 @@ SCOPE = "https://api.ebay.com/oauth/api_scope/sell.inventory"
 AUTH_URL = "https://auth.sandbox.ebay.com/oauth2/authorize"
 TOKEN_URL = "https://api.sandbox.ebay.com/identity/v1/oauth2/token"
 
-
-@app.route("/")
-def home():
-    auth_redirect_url = (
-        f"{AUTH_URL}?"
-        f"client_id={APP_ID}&"
-        f"response_type=code&"
-        f"redirect_uri={REDIRECT_URI}&"
-        f"scope={SCOPE}"
-    )
-    return flask.redirect(auth_redirect_url)
+access_token = None
 
 
-@app.route("/callback")
-def callback():
+def callback_controller():
     auth_code = flask.request.args.get("code")
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -72,14 +57,38 @@ def callback():
     }
 
     token_response = requests.post(TOKEN_URL, headers=headers, data=data)
-    token_response.raise_for_status()
-    access_token = token_response.json().get("access_token")
-    print(access_token)
-    return f"Access Token: {access_token}"
+    response_data = token_response.json()
 
-def open_browser():
-    webbrowser.open_new("http://localhost:5000/")
+    global access_token
+    access_token = response_data.get("access_token")
+    return flask.jsonify(response_data)
 
-if __name__ == "__main__":
-    threading.Timer(1, open_browser).start()
-    app.run(port=5000)
+def create_or_replace_inventory_item_controller():
+    global access_token
+    sku = 1  # HARDCODRD
+    api_url = f"https://api.sandbox.ebay.com/sell/inventory/v1/inventory_item/{sku}"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Language": "en-US",
+        "Content-Type": "application/json"
+    }
+    inventory_item_data = {  # HARDCODED
+        "sku": f"{sku}",
+        "product": {
+            "title": "Test Item",
+            "description": "This is a test item",
+            "aspects": {
+                "Brand": ["Unbranded"]
+            },
+            "brand": "Unbranded",
+            "mpn": "123456"
+        },
+        "availability": {
+            "shipToLocationAvailability": {
+                "quantity": 10
+            }
+        }
+    }
+
+    response = requests.put(api_url, headers=headers, json=inventory_item_data)
+    return flask.jsonify(response.json())

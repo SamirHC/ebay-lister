@@ -32,20 +32,20 @@ def get_secret():
 secret = get_secret()
 config = dotenv_values(".env")
 
-APP_ID = secret["APP_ID_SBX"]
-CERT_ID = secret["CERT_ID_SBX"]
-DEV_ID = secret["DEV_ID_SBX"]
+APP_ID = secret["APP_ID_PRD"]
+CERT_ID = secret["CERT_ID_PRD"]
+DEV_ID = secret["DEV_ID_PRD"]
 
-REDIRECT_URI = "Samir_Chowdhury-SamirCho-itemtr-hdghgnj"
+REDIRECT_URI = "Samir_Chowdhury-SamirCho-itemtr-apwqznrun"  #"Samir_Chowdhury-SamirCho-itemtr-hdghgnj"
 SCOPE = "https://api.ebay.com/oauth/api_scope/sell.inventory"
 
-AUTH_URL = "https://auth.sandbox.ebay.com/oauth2/authorize"
-TOKEN_URL = "https://api.sandbox.ebay.com/identity/v1/oauth2/token"
+AUTH_URL = "https://auth.ebay.com/oauth2/authorize"
+TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token"
 
 access_token = None
 
 
-def callback_controller():
+def callback_controller(app):
     auth_code = flask.request.args.get("code")
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -61,12 +61,13 @@ def callback_controller():
 
     global access_token
     access_token = response_data.get("access_token")
+    app.logger.info(f"Access Token 2: {access_token}")
     return flask.jsonify(response_data)
 
-def create_or_replace_inventory_item_controller():
+def create_or_replace_inventory_item_controller(app):
     global access_token
     sku = 1  # HARDCODRD
-    api_url = f"https://api.sandbox.ebay.com/sell/inventory/v1/inventory_item/{sku}"
+    api_url = f"https://api.ebay.com/sell/inventory/v1/inventory_item/{sku}"
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Language": "en-US",

@@ -61,7 +61,6 @@ def callback_controller(app):
 
     global access_token
     access_token = response_data.get("access_token")
-    app.logger.info(f"Access Token 2: {access_token}")
     return flask.jsonify(response_data)
 
 def create_or_replace_inventory_item_controller(app):

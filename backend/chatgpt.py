@@ -1,6 +1,6 @@
 from openai import OpenAI
 from dotenv import dotenv_values
-from chatgpt.model import Model, SystemMessage
+from backend.model import Model, SystemMessage
 import os
 
 config = dotenv_values(".env")

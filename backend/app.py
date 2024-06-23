@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 
-import ebay
+from . import ebay
 
 app = Flask(__name__)
 

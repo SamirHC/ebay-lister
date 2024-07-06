@@ -1,7 +1,8 @@
 from openai import OpenAI
 from dotenv import dotenv_values
-from backend.model import Model, SystemMessage
+from model import Model, SystemMessage
 import os
+import datetime
 
 config = dotenv_values(".env")
 client = OpenAI(api_key=config["OPENAI_API_KEY"])
@@ -11,6 +12,8 @@ MAX_TOKENS = 300
 
 def log_response(response):
     with open(os.path.join(os.getcwd(), "log.txt"), 'a') as file:
+        file.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        file.write("\n")
         file.write(str(response))
         file.write("\n")
 

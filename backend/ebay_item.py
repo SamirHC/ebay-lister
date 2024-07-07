@@ -34,13 +34,12 @@ class EbayItem:
 
 
 class EbayItemBuilder:
-    def __init__(self, image_path: str):
-        self.image_path = image_path
+    def __init__(self, image_urls: list[str]):
+        self.image_urls = image_urls
 
         self.title = ""
         self.description = ""
         self.category_id = ""
-        self.image_url = ""
 
     def set_title(self, title: str) -> EbayItemBuilder: 
         self.title = title
@@ -54,14 +53,13 @@ class EbayItemBuilder:
         self.category_id = category_id
         return self
     
-    def set_image_url(self, image_url: str) -> EbayItemBuilder:
-        self.image_url = image_url
-        return self
+    def format_image_urls(self):
+        return "|".join(self.image_urls)
 
     def build(self) -> EbayItem:
         return EbayItem(
             title=self.title,
             description=self.description,
             category_id=self.category_id,
-            image_URL=self.image_url
+            image_URL=self.format_image_urls()
         )

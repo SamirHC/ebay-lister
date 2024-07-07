@@ -19,23 +19,25 @@ def log_response(response):
 
 
 def get_chatgpt_4o_response(
-        prompt, base64_image, system_msg=SystemMessage.DEFAULT
+        prompt, image_urls, system_msg=SystemMessage.DEFAULT
 ):
+    image_url_data = map(
+        lambda url: {
+            "type": "image_url",
+            "image_url": {"url": url,},
+        },
+        image_urls
+    )
+    content_data = [{"type": "text", "text": prompt}]
+    content_data.extend(image_url_data)
+
     response = client.chat.completions.create(
         model=Model.GPT_4_O,
         messages=[
             {"role": "system", "content": system_msg},
             {
                 "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/png;base64,{base64_image}",
-                        },
-                    },
-                ],
+                "content": content_data,
             },
         ],
         max_tokens=MAX_TOKENS,

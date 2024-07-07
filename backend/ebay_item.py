@@ -7,10 +7,10 @@ class EbayItem:
         self,
         action="Draft",  # Default
         SKU="",  # Manual
-        category_id="",  # Default(?)
+        category_id="",
         title="",
         UPC="",  # Leave Blank
-        price="",  # Manual
+        price="11.95",  # Default
         quantity=1,  # Default
         image_URL="",
         condition_id="USED",  # Manual
@@ -30,7 +30,19 @@ class EbayItem:
         self.format = format
 
     def to_csv_row(self):
-        return f"{self.action},{self.SKU},{self.category_id},{self.title},{self.UPC},{self.price},{self.quantity},{self.image_URL},{self.condition_id},{self.description},{self.format}"
+        return ",".join([
+            self.action,
+            self.SKU,
+            self.category_id,
+            self.title,
+            self.UPC,
+            self.price,
+            self.quantity,
+            self.image_URL,
+            self.condition_id,
+            self.description,
+            self.format
+        ])
 
 
 class EbayItemBuilder:

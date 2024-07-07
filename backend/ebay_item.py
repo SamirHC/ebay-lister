@@ -30,7 +30,7 @@ class EbayItem:
         self.format = format
 
     def to_csv_row(self):
-        return ",".join([
+        return ",".join(map(str, [
             self.action,
             self.SKU,
             self.category_id,
@@ -42,7 +42,7 @@ class EbayItem:
             self.condition_id,
             self.description,
             self.format
-        ])
+        ]))
 
 
 class EbayItemBuilder:

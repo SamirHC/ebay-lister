@@ -12,7 +12,6 @@ Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8),Custom label (SK
 
 
 def query_title(image_urls):
-    print(image_urls)
     response = chatgpt.get_chatgpt_4o_response(model.Prompts.TITLE_PROMPT, image_urls)
     text = response.choices[0].message.content
     print(text)
@@ -44,8 +43,8 @@ def get_csv_line(subdir):
 
         rel_path = os.path.join(subdir, file)
         
-        url = image_handler.upload_image(rel_path)
-        image_urls.append(url)
+        image_handler.upload_image(rel_path)
+        image_urls.append(image_handler.get_public_url(rel_path))
     
     title = query_title(image_urls)
     category_id = "11450"  # query_category_id(image_urls)
@@ -58,7 +57,6 @@ def get_csv_line(subdir):
     )
 
     row = f"{item.to_csv_row()}\n"
-    print(row)
     return row
 
 if __name__ == "__main__":

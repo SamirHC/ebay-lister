@@ -2,17 +2,18 @@ import os
 import image_handler, chatgpt, model, ebay_item
 
 
-CSV_HEADER = """
+CSV_HEADER = f"""
 #INFO,Version=0.0.2,Template= eBay-draft-listings-template_GB,,,,,,,,
 #INFO Action and Category ID are required fields. 1) Set Action to Draft 2) Please find the category ID for your listings here: https://pages.ebay.com/sellerinformation/news/categorychanges.html,,,,,,,,,,
 "#INFO After you've successfully uploaded your draft from the Seller Hub Reports tab, complete your drafts to active listings here: https://www.ebay.co.uk/sh/lst/drafts",,,,,,,,,,
 #INFO,,,,,,,,,,
-Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8),Custom label (SKU),Category ID,Title,UPC,Price,Quantity,Item photo URL,Condition ID,Description,Format
+Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8),Custom label (SKU),Category ID,Title,UPC,Price,Quantity,Item photo URL,Condition ID,Description,Format,{",".join(ebay_item.all_specifics)}
 """
 
 
-def query_title(image_urls):
-    response = chatgpt.get_chatgpt_4o_response(model.Prompts.TITLE_PROMPT, image_urls)
+def query_image_info(image_urls):
+    response = chatgpt.get_chatgpt_4o_response(
+        model.Prompts.PROMPT, image_urls)
     text = response.choices[0].message.content
     print(text)
     return text
@@ -46,13 +47,17 @@ def get_csv_line(subdir):
         image_handler.upload_image(rel_path)
         image_urls.append(image_handler.get_public_url(rel_path))
     
-    title = query_title(image_urls)
-    category_id = "11450"  # query_category_id(image_urls)
-        
+    image_info = query_image_info(image_urls).split(",")
+    image_info = [item.strip() for item in image_info]
+    title = image_info[0]
+    category_id = image_info[1]
+    item_specifics = image_info[2:]
+
     item = (ebay_item.EbayItemBuilder(image_urls)
         .set_title(title)
         .set_description(title)
         .set_category_id(category_id)
+        .set_item_specifics(item_specifics)
         .build()
     )
 

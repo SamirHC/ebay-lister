@@ -23,12 +23,14 @@ class EbayItem:
         category_id="",
         title="",
         UPC="",  # Leave Blank
-        price="11.95",  # Default
-        quantity=1,  # Default
+        price="",  # Leave Blank
+        quantity="",  # Default
         image_URL="",
         condition_id="USED",  # Manual
         description="",
-        format="",  # Leave Blank
+        format="Auction",  # Defualt
+        duration=7,  # Default
+        start_price="11.99",  #Default
         item_specifics=None
     ):
         self.action = action
@@ -42,6 +44,8 @@ class EbayItem:
         self.condition_id = condition_id
         self.description = description
         self.format = format
+        self.duration = duration
+        self.start_price = start_price
         self.item_specifics=item_specifics
 
     def map_item_specifics(self):
@@ -69,6 +73,8 @@ class EbayItem:
             self.condition_id,
             self.description,
             self.format,
+            self.duration,
+            self.start_price,
             self.map_item_specifics()
         ]))
 

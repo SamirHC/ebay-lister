@@ -7,7 +7,7 @@ CSV_HEADER = f"""
 #INFO Action and Category ID are required fields. 1) Set Action to Draft 2) Please find the category ID for your listings here: https://pages.ebay.com/sellerinformation/news/categorychanges.html,,,,,,,,,,
 "#INFO After you've successfully uploaded your draft from the Seller Hub Reports tab, complete your drafts to active listings here: https://www.ebay.co.uk/sh/lst/drafts",,,,,,,,,,
 #INFO,,,,,,,,,,
-Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8),Custom label (SKU),Category ID,Title,UPC,Price,Quantity,Item photo URL,Condition ID,Description,Format,{",".join(ebay_item.all_specifics)}
+Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8),Custom label (SKU),Category ID,Title,UPC,Price,Quantity,Item photo URL,Condition ID,Description,Format,Duration,Start price,{",".join(ebay_item.all_specifics)}
 """
 
 
@@ -40,13 +40,13 @@ def get_csv_line(subdir):
     abs_path = os.path.join(image_handler.IMAGE_DIR, subdir)
 
     image_urls = []
-    for file in filter(image_handler.is_image_path, os.listdir(abs_path)):
+    for file in sorted(filter(image_handler.is_image_path, os.listdir(abs_path))):
 
         rel_path = os.path.join(subdir, file)
         
         image_handler.upload_image(rel_path)
         image_urls.append(image_handler.get_public_url(rel_path))
-    
+        
     image_info = query_image_info(image_urls).split(",")
     image_info = [item.strip() for item in image_info]
 

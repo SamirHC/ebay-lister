@@ -34,7 +34,25 @@ def get_csv_lines():
         if os.path.isdir(os.path.join(image_handler.IMAGE_DIR, entry))
     ]
 
-    return [get_csv_line(subdir) for subdir in subdirs]
+    res = []
+    for subdir in subdirs:
+        line = None
+        count = 0
+        while line is None and count < 3:
+            count += 1
+            try:
+                line = get_csv_line(subdir)
+            except Exception:
+                print(f"Something went wrong when getting the csv line for item {subdir}. Trying again (attempt {count})")
+        
+        if line is None:
+            # End getting csv lines and write what was able to be retrieved.
+            return res
+        else:
+            res.append(line)
+
+    return res
+
 
 def get_csv_line(subdir):
     abs_path = os.path.join(image_handler.IMAGE_DIR, subdir)

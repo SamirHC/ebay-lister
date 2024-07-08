@@ -24,5 +24,8 @@ class Prompts:
         made in. Then on a new line, tell me the ID that best corresponds to the
         images provided by using the csv file, as well as filling in the item 
         specific information. GIVE THE ANSWERS ONLY SEPARATED BY COMMAS AND WITHOUT SPEECH MARKS. Make sure that
-        the order of the information is preserved: Title, ID, Item specifics... DO NOT WRITE THE HEADING OF THE ITEM SPECIFIC IN YOUR ANSWER
+        the order of the information is preserved: Title, ID, Item specifics... WRITE THE HEADING OF THE ITEM SPECIFIC IN YOUR ANSWER,
+        for example:
+        Brand, Adidas, Size, 30, Colour, Brown
+        
         \n{get_ebay_csv()}"""

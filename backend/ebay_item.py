@@ -47,9 +47,9 @@ class EbayItem:
     def map_item_specifics(self):
         mapped = {s:"" for s in all_specifics}
 
-        cat_specifics = id_to_specifics[self.category_id]
-
-        for cs, it in zip(cat_specifics, self.item_specifics):
+        while self.item_specifics:
+            it = self.item_specifics.pop()
+            cs = f"C:{self.item_specifics.pop()}"
             mapped[cs] = it
         
         res = ",".join(mapped[s] for s in all_specifics)

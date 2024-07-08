@@ -21,8 +21,8 @@ def get_public_url(rel_path):
     return f"https://{BUCKET_NAME}.s3.{REGION_NAME}.amazonaws.com/{encoded_object_key}"
 
 def is_image_path(path: str):
-    return path.endswith(".png") or path.endswith(".jpeg")
-
+    image_file_extensions = [".png", ".jpeg", ".jpg", ".PNG", ".JPEG", ".JPG"]
+    return any(path.endswith(ext) for ext in image_file_extensions)
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")

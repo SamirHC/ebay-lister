@@ -49,6 +49,7 @@ def get_csv_line(subdir):
     
     image_info = query_image_info(image_urls).split(",")
     image_info = [item.strip() for item in image_info]
+
     title = image_info[0]
     category_id = image_info[1]
     item_specifics = image_info[2:]

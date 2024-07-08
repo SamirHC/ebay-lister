@@ -17,15 +17,16 @@ class Prompts:
         return "".join(lines)
     
     PROMPT = f"""
+        DO NOT USE NEW LINES ANYWHERE IN YOUR ANSWER.
         WRITE AN EBAY UK TITLE FOR THIS ITEM. Take into account what ebay uk 
         category the item is and therefore INCLUDE ANY REQUIRED ITEM SPECIFICS 
         for that category IN THE TITLE. You must make sure that the title does 
         not exceed 80 characters. Refrain from saying what country the item is 
-        made in. Then on a new line, tell me the ID that best corresponds to the
+        made in. DO NOT INCLUDE COMMAS IN THE TITLE. Then on a new line, tell me the ID that best corresponds to the
         images provided by using the csv file, as well as filling in the item 
         specific information. GIVE THE ANSWERS ONLY SEPARATED BY COMMAS AND WITHOUT SPEECH MARKS. Make sure that
         the order of the information is preserved: Title, ID, Item specifics... WRITE THE HEADING OF THE ITEM SPECIFIC IN YOUR ANSWER,
         for example:
         Brand, Adidas, Size, 30, Colour, Brown
-        
+
         \n{get_ebay_csv()}"""

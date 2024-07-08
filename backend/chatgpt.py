@@ -1,4 +1,4 @@
-from openai import OpenAI
+from openai import OpenAI, BadRequestError
 from dotenv import dotenv_values
 from model import Model, SystemMessage
 import os
@@ -31,17 +31,22 @@ def get_chatgpt_4o_response(
     content_data = [{"type": "text", "text": prompt}]
     content_data.extend(image_url_data)
 
-    response = client.chat.completions.create(
-        model=Model.GPT_4_O,
-        messages=[
-            {"role": "system", "content": system_msg},
-            {
-                "role": "user",
-                "content": content_data,
-            },
-        ],
-        max_tokens=MAX_TOKENS,
-    )
+    response = None
+    while response is None:
+        try:
+            response = client.chat.completions.create(
+                model=Model.GPT_4_O,
+                messages=[
+                    {"role": "system", "content": system_msg},
+                    {
+                        "role": "user",
+                        "content": content_data,
+                    },
+                ],
+                max_tokens=MAX_TOKENS,
+            )
+        except BadRequestError:
+            response = None
 
     log_response(response)
     return response

@@ -37,13 +37,15 @@ def get_csv_lines():
     res = []
     for subdir in subdirs:
         line = None
+        MAX_COUNT = 3
         count = 0
-        while line is None and count < 3:
+        while line is None and count < MAX_COUNT:
             count += 1
             try:
                 line = get_csv_line(subdir)
             except Exception:
-                print(f"Something went wrong when getting the csv line for item {subdir}. Trying again (attempt {count})")
+                if count != MAX_COUNT:
+                    print(f"Something went wrong when getting the csv line for item {subdir}. Trying again (attempt {count})")
         
         if line is None:
             # End getting csv lines and write what was able to be retrieved.

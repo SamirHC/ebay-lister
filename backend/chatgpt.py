@@ -32,8 +32,9 @@ def get_chatgpt_4o_response(
     content_data.extend(image_url_data)
 
     response = None
+    MAX_COUNT = 5
     count = 0
-    while response is None and count < 5:
+    while response is None and count < MAX_COUNT:
         count += 1
         try:
             response = client.chat.completions.create(
@@ -48,7 +49,8 @@ def get_chatgpt_4o_response(
                 max_tokens=MAX_TOKENS,
             )
         except BadRequestError:
-            print(f"ChatGPT failed to get a response. Trying again (attempt {count})")
+            if count != MAX_COUNT:
+                print(f"ChatGPT failed to get a response. Trying again (attempt {count})")
 
     if response is None:
         raise Exception("MAXIMUM ATTEMPTS MADE. ABORTING.")

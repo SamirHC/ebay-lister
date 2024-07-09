@@ -34,24 +34,26 @@ def get_csv_lines():
         if os.path.isdir(os.path.join(image_handler.IMAGE_DIR, entry))
     ]
 
+    MAX_COUNT = 3
     res = []
+
     for subdir in subdirs:
         line = None
-        MAX_COUNT = 3
         count = 0
         while line is None and count < MAX_COUNT:
             count += 1
             try:
                 line = get_csv_line(subdir)
             except Exception:
-                if count != MAX_COUNT:
-                    print(f"Something went wrong when getting the csv line for item {subdir}. Trying again (attempt {count})")
+                print(f"Something went wrong when getting the csv line for item {subdir}.")
+                if count < MAX_COUNT:
+                    print(f"Trying again (attempt {count})")
+                else:
+                    print(f"Maximum attempts made ({count}). Terminating early.")
+                    # End getting csv lines and write what was able to be retrieved.
+                    return res
         
-        if line is None:
-            # End getting csv lines and write what was able to be retrieved.
-            return res
-        else:
-            res.append(line)
+        res.append(line)
 
     return res
 

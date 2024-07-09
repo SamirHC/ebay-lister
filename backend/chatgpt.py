@@ -21,6 +21,8 @@ def log_response(response):
 def get_chatgpt_4o_response(
         prompt, image_urls, system_msg=SystemMessage.DEFAULT
 ):
+    MAX_COUNT = 5
+
     image_url_data = map(
         lambda url: {
             "type": "image_url",
@@ -32,7 +34,6 @@ def get_chatgpt_4o_response(
     content_data.extend(image_url_data)
 
     response = None
-    MAX_COUNT = 5
     count = 0
     while response is None and count < MAX_COUNT:
         count += 1
@@ -49,11 +50,12 @@ def get_chatgpt_4o_response(
                 max_tokens=MAX_TOKENS,
             )
         except BadRequestError:
-            if count != MAX_COUNT:
-                print(f"ChatGPT failed to get a response. Trying again (attempt {count})")
-
-    if response is None:
-        raise Exception("MAXIMUM ATTEMPTS MADE. ABORTING.")
-    else:
-        log_response(response)
-        return response
+            print("ChatGPT failed to get a response.")
+            if count < MAX_COUNT:
+                print(f" Trying again (attempt {count})")
+            else:
+                print("Maximum attempts made ({count}). Aborting ChatGPT.")
+                raise Exception
+    
+    log_response(response)
+    return response

@@ -30,3 +30,5 @@ class Prompts:
         Brand, Adidas, Size, 30, Colour, Brown
 
         \n{get_ebay_csv()}"""
+
+    FAIL_PROMPT = f"""write a single word describing these images and nothing else"""

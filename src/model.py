@@ -12,10 +12,13 @@ class SystemMessage:
 class Prompts:
     def get_ebay_csv():
         import os
-        with open(os.path.join(os.getcwd(), "Ebay Categories & Specifics.csv"), "r") as f:
+
+        with open(
+            os.path.join(os.getcwd(), "Ebay Categories & Specifics.csv"), "r"
+        ) as f:
             lines = f.readlines()
         return "".join(lines)
-    
+
     PROMPT = f"""
         DO NOT USE NEW LINES ANYWHERE IN YOUR ANSWER.
         WRITE AN EBAY UK TITLE FOR THIS ITEM. Take into account what ebay uk 

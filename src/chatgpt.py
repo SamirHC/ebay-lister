@@ -8,12 +8,12 @@ config = dotenv_values(".env")
 client = OpenAI(api_key=config["OPENAI_API_KEY"])
 
 MAX_TOKENS = 300
+MAX_ATTEMPTS = 5
 
 
 def get_chatgpt_4o_response(
         prompt, image_urls, system_msg=SystemMessage.DEFAULT
 ):
-    MAX_COUNT = 5
 
     image_url_data = map(
         lambda url: {
@@ -27,7 +27,7 @@ def get_chatgpt_4o_response(
 
     response = None
     count = 0
-    while response is None and count < MAX_COUNT:
+    while response is None and count < MAX_ATTEMPTS:
         count += 1
         try:
             response = client.chat.completions.create(
@@ -43,7 +43,7 @@ def get_chatgpt_4o_response(
             )
         except BadRequestError as e:
             logger.log_response(f"ChatGPT failed to get a response: {e}" )
-            if count < MAX_COUNT:
+            if count < MAX_ATTEMPTS:
                 logger.log_response(f" Trying again (attempt {count})")
             else:
                 logger.log_response("Maximum attempts made ({count}). Aborting ChatGPT.")

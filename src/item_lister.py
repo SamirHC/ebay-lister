@@ -1,5 +1,9 @@
 import os
-import image_handler, chatgpt, model, ebay_item, logger
+import image_handler
+import chatgpt
+import model
+import ebay_item
+import logger
 
 
 CSV_HEADER = f"""
@@ -9,6 +13,7 @@ CSV_HEADER = f"""
 #INFO,,,,,,,,,,
 Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8),Custom label (SKU),Category ID,Title,UPC,Price,Quantity,Item photo URL,Condition ID,Description,Format,Duration,Start price,{",".join(ebay_item.all_specifics)}
 """
+MAX_ATTEMPTS = 3
 
 
 def query_image_info(image_urls):
@@ -27,16 +32,17 @@ def write_items_to_csv():
 
 
 def try_get_csv_line(s):
-    MAX_COUNT = 3
     line = None
     count = 0
-    while line is None and count < MAX_COUNT:
+    while line is None and count < MAX_ATTEMPTS:
         count += 1
         try:
             line = get_csv_line(s)
         except Exception as e:
-            logger.log_response(f"Something went wrong when getting the csv line for item {s}: {e}")
-            if count < MAX_COUNT:
+            logger.log_response(
+                f"Something went wrong when getting the csv line for item {s}: {e}"
+            )
+            if count < MAX_ATTEMPTS:
                 logger.log_response(f"Trying again (attempt {count}) for item {s}")
             else:
                 logger.log_response(f"Maximum attempts made ({count}) for item {s}")
@@ -53,7 +59,9 @@ def get_csv_lines():
 
     res = []
     for i, s in enumerate(subdirs):
-        logger.log_response(f"Progress:  {i}/{len(subdirs)} ({round(100 * i/len(subdirs))}%)")
+        logger.log_response(
+            f"Progress:  {i}/{len(subdirs)} ({round(100 * i/len(subdirs))}%)"
+        )
         res.append((s, try_get_csv_line(s)))
     res.sort()
 

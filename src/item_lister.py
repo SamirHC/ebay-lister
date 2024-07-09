@@ -1,3 +1,4 @@
+import concurrent.futures
 import os
 import image_handler, chatgpt, model, ebay_item
 
@@ -27,39 +28,43 @@ def write_items_to_csv():
         f.write(f"{CSV_HEADER}\n")
         f.writelines(lines)
 
+def try_get_csv_line(s):
+    MAX_COUNT = 3
+    line = None
+    count = 0
+    while line is None and count < MAX_COUNT:
+        count += 1
+        try:
+            line = get_csv_line(s)
+        except Exception as e:
+            print(f"Something went wrong when getting the csv line for item {s}: {e}")
+            if count < MAX_COUNT:
+                print(f"Trying again (attempt {count}) for item {s}")
+            else:
+                print(f"Maximum attempts made ({count}) for item {s}")
+    return line
+
 def get_csv_lines():
+    MAX_WORKERS = 3
     subdirs = [
         entry 
         for entry in os.listdir(image_handler.IMAGE_DIR)
         if os.path.isdir(os.path.join(image_handler.IMAGE_DIR, entry))
     ]
 
-    MAX_COUNT = 3
     res = []
-    completed_subdirs = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        future_to_subdir = {executor.submit(try_get_csv_line, s): s for s in subdirs}
+        for future in concurrent.futures.as_completed(future_to_subdir):
+            s = future_to_subdir[future]
+            res.append((s, future.result()))
 
-    for s in subdirs:
-        line = None
-        count = 0
-        while line is None and count < MAX_COUNT:
-            count += 1
-            try:
-                line = get_csv_line(s)
-            except Exception:
-                print(f"Something went wrong when getting the csv line for item {s}.")
-                if count < MAX_COUNT:
-                    print(f"Trying again (attempt {count})")
-                else:
-                    print(f"Maximum attempts made ({count}). Terminating early.")
-                    print(f"Completed jobs: {completed_subdirs}")
-                    # End getting csv lines and write what was able to be retrieved.
-                    return res
-        
-        res.append(line)
-        completed_subdirs.append(s)
-
-    print("Progress: All jobs completed. (100%)")
-    return res
+    res.sort()
+    for s,r in res:
+        if r is None:
+            print(f"Failed: {s}")
+    
+    return [r for _,r in res if r is not None]
 
 
 def get_image_urls(subdir):

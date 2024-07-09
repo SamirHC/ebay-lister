@@ -41,8 +41,8 @@ def get_chatgpt_4o_response(
                 ],
                 max_tokens=MAX_TOKENS,
             )
-        except BadRequestError:
-            print("ChatGPT failed to get a response.")
+        except BadRequestError as e:
+            print(f"ChatGPT failed to get a response: {e}" )
             if count < MAX_COUNT:
                 print(f" Trying again (attempt {count})")
             else:

@@ -4,10 +4,14 @@ from botocore.client import Config
 import os
 import urllib.parse
 import logger
+from dotenv import dotenv_values
 
-BUCKET_NAME = "ebay-lister-images"
+config = dotenv_values(".env")
+
+BUCKET_NAME = config["AWS_BUCKET_NAME"]
+REGION_NAME = config["AWS_REGION_NAME"]
+
 IMAGE_DIR = os.path.join(os.getcwd(), "images")
-REGION_NAME = "eu-west-2"
 
 s3 = boto3.client(
     "s3", region_name=REGION_NAME, config=Config(signature_version="s3v4")

@@ -49,11 +49,16 @@ def get_csv_lines():
         for entry in os.listdir(image_handler.IMAGE_DIR)
         if os.path.isdir(os.path.join(image_handler.IMAGE_DIR, entry))
     ]
+    subdirs.sort()
 
-    res = [(s, try_get_csv_line(s)) for s in subdirs]
+    res = []
+    for i, s in enumerate(subdirs):
+        print(f"Progress:  {i}/{len(subdirs)} ({round(100 * i/len(subdirs))}%)")
+        res.append((s, try_get_csv_line(s)))
     res.sort()
 
-    print(f"Failed: {[s for s,r in res if r is None]}")
+    print(f"Progress: {len(subdirs)}/{len(subdirs)} (100%)")
+    print(f"Failed jobs: {[s for s,r in res if r is None]}")
 
     return [r for _, r in res if r is not None]
 

@@ -14,7 +14,7 @@ class Prompts:
         import os
 
         with open(
-            os.path.join(os.getcwd(), "Ebay Categories & Specifics.csv"), "r"
+            os.path.join(os.getcwd(), "src", "Ebay Categories & Specifics.csv"), "r"
         ) as f:
             lines = f.readlines()
         return "".join(lines)

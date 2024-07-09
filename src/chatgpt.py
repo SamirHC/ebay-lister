@@ -1,21 +1,13 @@
 from openai import OpenAI, BadRequestError
 from dotenv import dotenv_values
 from model import Model, SystemMessage
-import os
-import datetime
+import logger
+
 
 config = dotenv_values(".env")
 client = OpenAI(api_key=config["OPENAI_API_KEY"])
 
 MAX_TOKENS = 300
-
-
-def log_response(response):
-    with open(os.path.join(os.getcwd(), "log.txt"), 'a') as file:
-        file.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        file.write("\n")
-        file.write(str(response))
-        file.write("\n")
 
 
 def get_chatgpt_4o_response(
@@ -57,5 +49,5 @@ def get_chatgpt_4o_response(
                 print("Maximum attempts made ({count}). Aborting ChatGPT.")
                 raise Exception
     
-    log_response(response)
+    logger.log_response(response)
     return response

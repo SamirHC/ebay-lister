@@ -36,6 +36,7 @@ def get_csv_lines():
 
     MAX_COUNT = 3
     res = []
+    completed_subdirs = []
 
     for s in subdirs:
         line = None
@@ -50,30 +51,49 @@ def get_csv_lines():
                     print(f"Trying again (attempt {count})")
                 else:
                     print(f"Maximum attempts made ({count}). Terminating early.")
+                    print(f"Completed jobs: {completed_subdirs}")
                     # End getting csv lines and write what was able to be retrieved.
                     return res
         
         res.append(line)
+        completed_subdirs.append(s)
 
+    print("Progress: All jobs completed. (100%)")
     return res
 
 
-def get_csv_line(subdir):
+def get_image_urls(subdir):
     abs_path = os.path.join(image_handler.IMAGE_DIR, subdir)
 
     image_urls = []
     for file in sorted(filter(image_handler.is_image_path, os.listdir(abs_path))):
-
         rel_path = os.path.join(subdir, file)
-        
         image_handler.upload_image(rel_path)
         image_urls.append(image_handler.get_public_url(rel_path))
-        
-    image_info = query_image_info(image_urls).split(",")
-    image_info = [item.strip() for item in image_info]
+
+    return image_urls
+
+
+def get_csv_line(subdir):
+    image_urls = get_image_urls(subdir)
+
+    image_info = query_image_info(image_urls)
+    if "\n" in image_info:
+        print("Aborting: Detected newline.")
+        raise Exception
+    elif image_info[0] =='\"':
+        print("Aborting: Detected starting speech marks.")
+        raise Exception
+    image_info = [item.strip() for item in image_info.split(",")]
 
     title = image_info[0]
-    category_id = image_info[1]
+
+    try:
+        category_id = str(int(image_info[1]))
+    except:
+        print("Aborting: Non-integer category ID (Possibly due to comma in title)")
+        raise Exception
+    
     item_specifics = image_info[2:]
 
     item = (ebay_item.EbayItemBuilder(image_urls)

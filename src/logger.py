@@ -1,10 +1,13 @@
-import os
-import datetime
+import logging
+
+
+logging.basicConfig(
+    filename="log.txt",
+    level=logging.INFO, 
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 
 def log_response(response):
-    with open(os.path.join(os.getcwd(), "log.txt"), 'a') as file:
-        file.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        file.write("\n")
-        file.write(str(response))
-        file.write("\n")
+    logging.info(response)
+    print(response)

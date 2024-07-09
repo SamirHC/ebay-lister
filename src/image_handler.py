@@ -3,6 +3,7 @@ import boto3
 from botocore.client import Config
 import os
 import urllib.parse
+import logger
 
 BUCKET_NAME = "ebay-lister-images"
 IMAGE_DIR = os.path.join(os.getcwd(), "images")
@@ -14,7 +15,7 @@ s3 = boto3.client("s3", region_name=REGION_NAME, config=Config(signature_version
 def upload_image(rel_path):
     image_path = os.path.join(IMAGE_DIR, rel_path)
     s3.upload_file(image_path, BUCKET_NAME, rel_path)
-    print(f"Uploaded {image_path} to {BUCKET_NAME}/{rel_path}.")
+    logger.log_response(f"Uploaded {image_path} to {BUCKET_NAME}/{rel_path}.")
 
 def get_public_url(rel_path):
     encoded_object_key = urllib.parse.quote_plus(rel_path)

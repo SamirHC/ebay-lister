@@ -1,5 +1,5 @@
 import os
-import image_handler, chatgpt, model, ebay_item
+import image_handler, chatgpt, model, ebay_item, logger
 
 
 CSV_HEADER = f"""
@@ -14,7 +14,7 @@ Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8),Custom label (SK
 def query_image_info(image_urls):
     response = chatgpt.get_chatgpt_4o_response(model.Prompts.PROMPT, image_urls)
     text = response.choices[0].message.content
-    print(text)
+    logger.log_response(f"ChatGPT output: {text}")
     return text
 
 
@@ -35,11 +35,11 @@ def try_get_csv_line(s):
         try:
             line = get_csv_line(s)
         except Exception as e:
-            print(f"Something went wrong when getting the csv line for item {s}: {e}")
+            logger.log_response(f"Something went wrong when getting the csv line for item {s}: {e}")
             if count < MAX_COUNT:
-                print(f"Trying again (attempt {count}) for item {s}")
+                logger.log_response(f"Trying again (attempt {count}) for item {s}")
             else:
-                print(f"Maximum attempts made ({count}) for item {s}")
+                logger.log_response(f"Maximum attempts made ({count}) for item {s}")
     return line
 
 
@@ -53,12 +53,12 @@ def get_csv_lines():
 
     res = []
     for i, s in enumerate(subdirs):
-        print(f"Progress:  {i}/{len(subdirs)} ({round(100 * i/len(subdirs))}%)")
+        logger.log_response(f"Progress:  {i}/{len(subdirs)} ({round(100 * i/len(subdirs))}%)")
         res.append((s, try_get_csv_line(s)))
     res.sort()
 
-    print(f"Progress: {len(subdirs)}/{len(subdirs)} (100%)")
-    print(f"Failed jobs: {[s for s,r in res if r is None]}")
+    logger.log_response(f"Progress: {len(subdirs)}/{len(subdirs)} (100%)")
+    logger.log_response(f"Failed jobs: {[s for s,r in res if r is None]}")
 
     return [r for _, r in res if r is not None]
 
@@ -80,7 +80,6 @@ def get_csv_line(subdir):
 
     image_info = query_image_info(image_urls)
     if "\n" in image_info:
-        print()
         raise Exception("Aborting: Detected newline.")
     elif image_info[0] == '"':
         raise Exception("Aborting: Detected starting speech marks.")

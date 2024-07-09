@@ -1,4 +1,4 @@
-import item_lister
+import item_lister, logger
 import time
 
 if __name__ == "__main__":
@@ -8,4 +8,4 @@ if __name__ == "__main__":
 
     end_time = time.time()
     elapsed_time = end_time - start_time
-    print(f"Total elapsed time: {elapsed_time:.4f} seconds")
+    logger.log_response(f"Total elapsed time: {elapsed_time:.4f} seconds")

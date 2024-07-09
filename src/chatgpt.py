@@ -42,12 +42,11 @@ def get_chatgpt_4o_response(
                 max_tokens=MAX_TOKENS,
             )
         except BadRequestError as e:
-            print(f"ChatGPT failed to get a response: {e}" )
+            logger.log_response(f"ChatGPT failed to get a response: {e}" )
             if count < MAX_COUNT:
-                print(f" Trying again (attempt {count})")
+                logger.log_response(f" Trying again (attempt {count})")
             else:
-                print("Maximum attempts made ({count}). Aborting ChatGPT.")
+                logger.log_response("Maximum attempts made ({count}). Aborting ChatGPT.")
                 raise Exception
     
-    logger.log_response(response)
     return response

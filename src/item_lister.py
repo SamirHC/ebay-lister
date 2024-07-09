@@ -111,7 +111,7 @@ def get_csv_line(subdir):
         .set_category_id(category_id)
         .set_item_specifics(item_specifics)
         .build()
-    )
+    )  # May raise exception if item_specifics aren't fulfilled
 
     row = f"{item.to_csv_row()}\n"
     return row

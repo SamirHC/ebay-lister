@@ -49,17 +49,6 @@ class EbayItem:
         self.start_price = start_price
         self.item_specifics = item_specifics
 
-    def map_item_specifics(self):
-        mapped = {s: "" for s in all_specifics}
-
-        while self.item_specifics:
-            it = self.item_specifics.pop()
-            cs = f"C:{self.item_specifics.pop()}"
-            mapped[cs] = it
-
-        res = ",".join(mapped[s] for s in all_specifics)
-        return res
-
     def to_csv_row(self):
         return ",".join(
             map(
@@ -78,7 +67,7 @@ class EbayItem:
                     self.format,
                     self.duration,
                     self.start_price,
-                    self.map_item_specifics(),
+                    self.item_specifics,
                 ],
             )
         )
@@ -106,7 +95,17 @@ class EbayItemBuilder:
         return self
 
     def set_item_specifics(self, item_specifics: list[str]) -> EbayItemBuilder:
-        self.item_specifics = item_specifics
+        mapped = {s: "" for s in all_specifics}
+
+        while item_specifics:
+            it = item_specifics.pop()
+            cs = f"C:{item_specifics.pop()}"
+            mapped[cs] = it
+
+        for s in id_to_specifics[self.category_id]:
+            assert mapped[s]
+
+        self.item_specifics = ",".join(mapped[s] for s in all_specifics)
         return self
 
     def format_image_urls(self):

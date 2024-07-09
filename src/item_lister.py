@@ -1,4 +1,3 @@
-import concurrent.futures
 import os
 import image_handler, chatgpt, model, ebay_item
 
@@ -13,8 +12,7 @@ Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8),Custom label (SK
 
 
 def query_image_info(image_urls):
-    response = chatgpt.get_chatgpt_4o_response(
-        model.Prompts.PROMPT, image_urls)
+    response = chatgpt.get_chatgpt_4o_response(model.Prompts.PROMPT, image_urls)
     text = response.choices[0].message.content
     print(text)
     return text
@@ -24,9 +22,9 @@ def write_items_to_csv():
     lines = get_csv_lines()
 
     with open("out.csv", "w") as f:
-        
         f.write(f"{CSV_HEADER}\n")
         f.writelines(lines)
+
 
 def try_get_csv_line(s):
     MAX_COUNT = 3
@@ -44,27 +42,20 @@ def try_get_csv_line(s):
                 print(f"Maximum attempts made ({count}) for item {s}")
     return line
 
+
 def get_csv_lines():
-    MAX_WORKERS = 3
     subdirs = [
-        entry 
+        entry
         for entry in os.listdir(image_handler.IMAGE_DIR)
         if os.path.isdir(os.path.join(image_handler.IMAGE_DIR, entry))
     ]
 
-    res = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        future_to_subdir = {executor.submit(try_get_csv_line, s): s for s in subdirs}
-        for future in concurrent.futures.as_completed(future_to_subdir):
-            s = future_to_subdir[future]
-            res.append((s, future.result()))
-
+    res = [(s, try_get_csv_line(s)) for s in subdirs]
     res.sort()
-    for s,r in res:
-        if r is None:
-            print(f"Failed: {s}")
-    
-    return [r for _,r in res if r is not None]
+
+    print(f"Failed: {[s for s,r in res if r is None]}")
+
+    return [r for _, r in res if r is not None]
 
 
 def get_image_urls(subdir):
@@ -84,11 +75,10 @@ def get_csv_line(subdir):
 
     image_info = query_image_info(image_urls)
     if "\n" in image_info:
-        print("Aborting: Detected newline.")
-        raise Exception
-    elif image_info[0] =='\"':
-        print("Aborting: Detected starting speech marks.")
-        raise Exception
+        print()
+        raise Exception("Aborting: Detected newline.")
+    elif image_info[0] == '"':
+        raise Exception("Aborting: Detected starting speech marks.")
     image_info = [item.strip() for item in image_info.split(",")]
 
     title = image_info[0]
@@ -96,12 +86,14 @@ def get_csv_line(subdir):
     try:
         category_id = str(int(image_info[1]))
     except:
-        print("Aborting: Non-integer category ID (Possibly due to comma in title)")
-        raise Exception
-    
+        raise Exception(
+            "Aborting: Non-integer category ID (Possibly due to comma in title)"
+        )
+
     item_specifics = image_info[2:]
 
-    item = (ebay_item.EbayItemBuilder(image_urls)
+    item = (
+        ebay_item.EbayItemBuilder(image_urls)
         .set_title(title)
         .set_description(title)
         .set_category_id(category_id)

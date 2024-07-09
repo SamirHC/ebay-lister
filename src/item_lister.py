@@ -37,15 +37,15 @@ def get_csv_lines():
     MAX_COUNT = 3
     res = []
 
-    for subdir in subdirs:
+    for s in subdirs:
         line = None
         count = 0
         while line is None and count < MAX_COUNT:
             count += 1
             try:
-                line = get_csv_line(subdir)
+                line = get_csv_line(s)
             except Exception:
-                print(f"Something went wrong when getting the csv line for item {subdir}.")
+                print(f"Something went wrong when getting the csv line for item {s}.")
                 if count < MAX_COUNT:
                     print(f"Trying again (attempt {count})")
                 else:
@@ -86,6 +86,3 @@ def get_csv_line(subdir):
 
     row = f"{item.to_csv_row()}\n"
     return row
-
-if __name__ == "__main__":
-    write_items_to_csv()

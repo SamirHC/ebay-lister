@@ -103,7 +103,11 @@ class EbayItemBuilder:
             mapped[cs] = it
 
         for s in id_to_specifics[self.category_id]:
-            assert mapped[s]
+            if not mapped[s]:
+                raise Exception(f"{s} is not provided.")
+
+        if mapped["C:Brand"] not in self.title:
+            raise Exception("Title does not include brand name.")
 
         self.item_specifics = ",".join(mapped[s] for s in all_specifics)
         return self

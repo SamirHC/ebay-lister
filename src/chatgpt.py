@@ -46,7 +46,7 @@ def get_chatgpt_4o_response(
             if count < MAX_ATTEMPTS:
                 logger.log_response(f" Trying again (attempt {count})")
             else:
-                logger.log_response("Maximum attempts made ({count}). Aborting ChatGPT.")
+                logger.log_response(f"Maximum attempts made ({count}). Aborting ChatGPT.")
                 raise Exception
     
     return response

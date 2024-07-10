@@ -30,7 +30,7 @@ class Prompts:
         specific information. GIVE THE ANSWERS ONLY SEPARATED BY COMMAS AND WITHOUT SPEECH MARKS. Make sure that
         the order of the information is preserved: Title, ID, Item specifics... WRITE THE HEADING OF THE ITEM SPECIFIC IN YOUR ANSWER,
         for example:
-        Brand, Adidas, Size, 30, Colour, Brown
+        Brand, Adidas, Size, 30, Colour, Brown, Fit, Regular, Sleeve Length, Long Sleeve
 
         \n{get_ebay_csv()}"""
 

@@ -8,7 +8,8 @@ with open(os.path.join("src", "Ebay Categories & Specifics.csv"), mode="r") as f
     csv_reader = csv.reader(f)
     next(csv_reader)  # Skip header
     for row in csv_reader:
-        id, specifics = str(row[1]), [f"C:{x.strip()}" for x in row[2].split(",")]
+        id = str(row[1])
+        specifics = [x.strip() for x in row[2].split(",")]
         id_to_specifics[id] = specifics
 
 all_specifics = list(
@@ -98,15 +99,15 @@ class EbayItemBuilder:
         mapped = {s: "" for s in all_specifics}
 
         while item_specifics:
-            it = item_specifics.pop()
-            cs = f"C:{item_specifics.pop()}"
+            it = item_specifics.pop().title()
+            cs = item_specifics.pop().title()
             mapped[cs] = it
 
         for s in id_to_specifics[self.category_id]:
             if not mapped[s]:
                 raise Exception(f"{s} is not provided.")
 
-        if mapped["C:Brand"] not in self.title:
+        if mapped["Brand"] not in self.title:
             raise Exception("Title does not include brand name.")
 
         self.item_specifics = ",".join(mapped[s] for s in all_specifics)

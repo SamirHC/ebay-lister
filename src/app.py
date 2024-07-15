@@ -6,7 +6,7 @@ if __name__ == "__main__":
     logger.log_response("Starting Listing Tool...")
     start_time = time.time()
 
-    item_lister.write_items_to_csv()
+    item_lister.main()
 
     end_time = time.time()
     elapsed_time = end_time - start_time

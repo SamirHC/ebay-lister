@@ -6,69 +6,23 @@ import ebay_item
 import logger
 
 
-CSV_HEADER = f"""
-#INFO,Version=0.0.2,Template= eBay-draft-listings-template_GB,,,,,,,,
-#INFO Action and Category ID are required fields. 1) Set Action to Draft 2) Please find the category ID for your listings here: https://pages.ebay.com/sellerinformation/news/categorychanges.html,,,,,,,,,,
-"#INFO After you've successfully uploaded your draft from the Seller Hub Reports tab, complete your drafts to active listings here: https://www.ebay.co.uk/sh/lst/drafts",,,,,,,,,,
-#INFO,,,,,,,,,,
-Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8),Custom label (SKU),Category ID,Title,UPC,Price,Quantity,Item photo URL,Condition ID,Description,Format,Duration,Start price,{",".join(ebay_item.all_specifics)}
-"""
 MAX_ATTEMPTS = 3
 
+def main():
+    subdirs = get_subdirs()
+    image_urls = {subdir: get_image_urls(subdir) for subdir in subdirs}
 
-def query_image_info(image_urls):
-    response = chatgpt.get_chatgpt_4o_response(model.Prompts.PROMPT, image_urls)
-    text = response.choices[0].message.content
-    logger.log_response(f"ChatGPT output: {text}")
-    return text
+    lines = get_csv_lines(image_urls)
 
-
-def write_items_to_csv():
-    lines = get_csv_lines()
-
-    with open("out.csv", "w") as f:
-        f.write(f"{CSV_HEADER}\n")
-        f.writelines(lines)
+    write_items_to_csv(lines)
 
 
-def try_get_csv_line(s):
-    line = None
-    count = 0
-    while line is None and count < MAX_ATTEMPTS:
-        count += 1
-        try:
-            line = get_csv_line(s)
-        except Exception as e:
-            logger.log_response(
-                f"Something went wrong when getting the csv line for item {s}: {e}"
-            )
-            if count < MAX_ATTEMPTS:
-                logger.log_response(f"Trying again (attempt {count}) for item {s}")
-            else:
-                logger.log_response(f"Maximum attempts made ({count}) for item {s}")
-    return line
-
-
-def get_csv_lines():
-    subdirs = [
+def get_subdirs():
+    return [
         entry
         for entry in os.listdir(image_handler.IMAGE_DIR)
         if os.path.isdir(os.path.join(image_handler.IMAGE_DIR, entry))
     ]
-    subdirs.sort()
-
-    res = []
-    for i, s in enumerate(subdirs):
-        logger.log_response(
-            f"Progress:  {i}/{len(subdirs)} ({round(100 * i/len(subdirs))}%)"
-        )
-        res.append((s, try_get_csv_line(s)))
-    res.sort()
-
-    logger.log_response(f"Progress: {len(subdirs)}/{len(subdirs)} (100%)")
-    logger.log_response(f"Failed jobs: {[s for s,r in res if r is None]}")
-
-    return [r for _, r in res if r is not None]
 
 
 def get_image_urls(subdir):
@@ -82,9 +36,42 @@ def get_image_urls(subdir):
     return image_urls
 
 
-def get_csv_line(subdir):
-    image_urls = get_image_urls(subdir)
+def get_csv_lines(image_urls: dict[str, list[str]]):
+    NUM_SUBDIRS = len(image_urls)
+    res = []
 
+    for i, s in enumerate(image_urls):
+        logger.log_response(
+            f"Progress:  {i}/{NUM_SUBDIRS} ({round(100 * i/NUM_SUBDIRS)}%)"
+        )
+        res.append((s, try_get_csv_line(s, image_urls.get(s))))
+    res.sort()
+
+    logger.log_response(f"Progress: {NUM_SUBDIRS}/{NUM_SUBDIRS} (100%)")
+    logger.log_response(f"Failed jobs: {[s for s,r in res if r is None]}")
+
+    return [r for _, r in res if r is not None]
+
+
+def try_get_csv_line(s: str, subdir_image_urls: list[str]):
+    line = None
+    count = 0
+    while line is None and count < MAX_ATTEMPTS:
+        count += 1
+        try:
+            line = get_csv_line(subdir_image_urls)
+        except Exception as e:
+            logger.log_response(
+                f"Something went wrong when getting the csv line for item {s}: {e}"
+            )
+            if count < MAX_ATTEMPTS:
+                logger.log_response(f"Trying again (attempt {count}) for item {s}")
+            else:
+                logger.log_response(f"Maximum attempts made ({count}) for item {s}")
+    return line
+
+
+def get_csv_line(image_urls):
     image_info = query_image_info(image_urls)
     if "\n" in image_info:
         raise Exception("Aborting: Detected newline.")
@@ -114,3 +101,25 @@ def get_csv_line(subdir):
 
     row = f"{item.to_csv_row()}\n"
     return row
+
+
+def query_image_info(image_urls):
+    response = chatgpt.get_chatgpt_4o_response(model.Prompts.PROMPT, image_urls)
+    text = response.choices[0].message.content
+    logger.log_response(f"ChatGPT output: {text}")
+    return text
+
+
+CSV_HEADER = f"""
+#INFO,Version=0.0.2,Template= eBay-draft-listings-template_GB,,,,,,,,
+#INFO Action and Category ID are required fields. 1) Set Action to Draft 2) Please find the category ID for your listings here: https://pages.ebay.com/sellerinformation/news/categorychanges.html,,,,,,,,,,
+#INFO After you've successfully uploaded your draft from the Seller Hub Reports tab, complete your drafts to active listings here: https://www.ebay.co.uk/sh/lst/drafts",,,,,,,,,,
+#INFO,,,,,,,,,,
+Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8),Custom label (SKU),Category ID,Title,UPC,Price,Quantity,Item photo URL,Condition ID,Description,Format,Duration,Start price,{",".join(ebay_item.all_specifics)}
+"""
+
+
+def write_items_to_csv(lines):
+    with open("out.csv", "w") as f:
+        f.write(f"{CSV_HEADER}\n")
+        f.writelines(lines)

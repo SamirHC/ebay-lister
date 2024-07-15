@@ -4,6 +4,7 @@ import time
 if __name__ == "__main__":
     logger.log_response("="*80)
     logger.log_response("Starting Listing Tool...")
+    logger.log_response("")
     start_time = time.time()
 
     item_lister.main()

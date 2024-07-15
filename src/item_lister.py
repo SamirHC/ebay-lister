@@ -10,7 +10,11 @@ MAX_ATTEMPTS = 3
 
 def main():
     subdirs = get_subdirs()
+
+    logger.log_response("Started uploading images.")
     image_urls = {subdir: get_image_urls(subdir) for subdir in subdirs}
+    logger.log_response("Finished uploading images.")
+    logger.log_response("")
 
     lines = get_csv_lines(image_urls)
 
@@ -47,8 +51,10 @@ def get_csv_lines(image_urls: dict[str, list[str]]):
         res.append((s, try_get_csv_line(s, image_urls.get(s))))
     res.sort()
 
+    logger.log_response("")
     logger.log_response(f"Progress: {NUM_SUBDIRS}/{NUM_SUBDIRS} (100%)")
     logger.log_response(f"Failed jobs: {[s for s,r in res if r is None]}")
+    logger.log_response("")
 
     return [r for _, r in res if r is not None]
 

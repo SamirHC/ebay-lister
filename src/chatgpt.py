@@ -8,7 +8,7 @@ config = dotenv_values(".env")
 client = OpenAI(api_key=config["OPENAI_API_KEY"])
 
 MAX_TOKENS = 300
-MAX_ATTEMPTS = 5
+MAX_ATTEMPTS = 10  # No cost associated with BadRequestErrors
 
 
 def get_chatgpt_4o_response(

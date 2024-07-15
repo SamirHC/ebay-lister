@@ -76,9 +76,8 @@ def get_image_urls(subdir):
 
     image_urls = []
     for file in sorted(filter(image_handler.is_image_path, os.listdir(abs_path))):
-        rel_path = os.path.join(subdir, file)
-        image_handler.upload_image(rel_path)
-        image_urls.append(image_handler.get_public_url(rel_path))
+        image_handler.upload_image(subdir, file)
+        image_urls.append(image_handler.get_public_url(subdir, file))
 
     return image_urls
 

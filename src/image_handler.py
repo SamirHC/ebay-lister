@@ -18,14 +18,15 @@ s3 = boto3.client(
 )
 
 
-def upload_image(rel_path):
-    image_path = os.path.join(IMAGE_DIR, rel_path)
-    s3.upload_file(image_path, BUCKET_NAME, rel_path)
-    logger.log_response(f"Uploaded {image_path} to {BUCKET_NAME}/{rel_path}.")
+def upload_image(dir, file):
+    image_path = os.path.join(IMAGE_DIR, dir, file)
+    aws_path = f"{dir}/{file}"
+    s3.upload_file(image_path, BUCKET_NAME, aws_path)
+    logger.log_response(f"Uploaded {image_path} to {BUCKET_NAME}/{aws_path}.")
 
 
-def get_public_url(rel_path):
-    encoded_object_key = urllib.parse.quote_plus(rel_path)
+def get_public_url(dir, file):
+    encoded_object_key = urllib.parse.quote_plus(f"{dir}/{file}")
     return f"https://{BUCKET_NAME}.s3.{REGION_NAME}.amazonaws.com/{encoded_object_key}"
 
 

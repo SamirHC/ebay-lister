@@ -7,16 +7,23 @@ import logger
 import concurrent.futures
 
 
-MAX_ATTEMPTS = 3
+MAX_ATTEMPTS = 5
 PARALLEL = True
-MAX_WORKERS = 3
+MAX_WORKERS = 20
 
 
 def main():
     subdirs = get_subdirs()
 
     logger.log_response("Started uploading images.")
-    image_urls = {subdir: get_image_urls(subdir) for subdir in subdirs}
+
+    image_urls = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        future_to_subdir = {executor.submit(get_image_urls, s): s for s in subdirs}
+        for future in concurrent.futures.as_completed(future_to_subdir):
+            s = future_to_subdir[future]
+            image_urls[s] = future.result()
+
     logger.log_response("Finished uploading images.")
     logger.log_response("")
 

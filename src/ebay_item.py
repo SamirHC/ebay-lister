@@ -99,19 +99,29 @@ class EbayItemBuilder:
         mapped = {s: "" for s in all_specifics}
 
         while item_specifics:
-            it = item_specifics.pop().title()
-            cs = item_specifics.pop().title()
-            mapped[cs] = it
+            v = item_specifics.pop().title()
+            k = item_specifics.pop().title()
+            if k not in mapped:
+                if k == "Number Of Pieces":
+                    k = "Number of Pieces"
+                elif k == "Uk Shoe Size":
+                    k = "UK Shoe Size"
+                else:
+                    raise Exception(f"UNKNOWN CATEGORY: Could not parse {k}")
+            mapped[k] = v
 
         for s in id_to_specifics[self.category_id]:
             if not mapped[s]:
                 raise Exception(f"{s} is not provided.")
 
-        if mapped["Brand"] not in self.title:
-            raise Exception("Title does not include brand name.")
+        self.check_title_for_category("Brand", item_specifics, mapped)
 
         self.item_specifics = ",".join(mapped[s] for s in all_specifics)
         return self
+    
+    def check_title_for_category(self, category: str, item_specifics, mapped):
+        if category in item_specifics and mapped[category] not in self.title:
+            raise Exception(f"Title does not include {category}.")
 
     def format_image_urls(self):
         return "|".join(self.image_urls)

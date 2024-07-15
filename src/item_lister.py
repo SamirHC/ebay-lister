@@ -4,9 +4,13 @@ import chatgpt
 import model
 import ebay_item
 import logger
+import concurrent.futures
 
 
 MAX_ATTEMPTS = 3
+PARALLEL = True
+MAX_WORKERS = 3
+
 
 def main():
     subdirs = get_subdirs()
@@ -16,7 +20,8 @@ def main():
     logger.log_response("Finished uploading images.")
     logger.log_response("")
 
-    lines = get_csv_lines(image_urls)
+    csv_line_getter = get_csv_lines_parallel if PARALLEL else get_csv_lines
+    lines = csv_line_getter(image_urls)
 
     write_items_to_csv(lines)
 
@@ -49,6 +54,26 @@ def get_csv_lines(image_urls: dict[str, list[str]]):
             f"Progress:  {i}/{NUM_SUBDIRS} ({round(100 * i/NUM_SUBDIRS)}%)"
         )
         res.append((s, try_get_csv_line(s, image_urls.get(s))))
+    res.sort()
+
+    logger.log_response("")
+    logger.log_response(f"Progress: {NUM_SUBDIRS}/{NUM_SUBDIRS} (100%)")
+    logger.log_response(f"Failed jobs: {[s for s,r in res if r is None]}")
+    logger.log_response("")
+
+    return [r for _, r in res if r is not None]
+
+
+def get_csv_lines_parallel(image_urls: dict[str, list[str]]):
+    NUM_SUBDIRS = len(image_urls)
+    res = []
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        future_to_subdir = {executor.submit(try_get_csv_line, s, urls): s for s, urls in image_urls.items()}
+        for future in concurrent.futures.as_completed(future_to_subdir):
+            s = future_to_subdir[future]
+            res.append((s, future.result()))
+    
     res.sort()
 
     logger.log_response("")

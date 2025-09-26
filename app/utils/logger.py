@@ -1,14 +1,15 @@
-from datetime import datetime
 import logging
 import os
+
+from app.utils import time_util
 
 
 LOG_DIR = os.path.join("out", "log")
 
 
 def get_log_file_name():
-    time_str = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-    return os.path.join(LOG_DIR, f"{time_str}.txt")
+    file_name = f"{time_util.get_timestamp()}.txt"
+    return os.path.join(LOG_DIR, file_name)
 
 
 logging.basicConfig(

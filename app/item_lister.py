@@ -1,11 +1,11 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime
 import os
 
 from app import chatgpt
 from app import ebay_item
 from app import image_handler
 from app.utils import logger
+from app.utils import time_util
 
 
 MAX_ATTEMPTS = 5
@@ -190,8 +190,8 @@ Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8),Custom label (SK
 
 
 def write_items_to_csv(lines):
-    time_str = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-    out_path = os.path.join("out", f"out_{time_str}.csv")
+    file_name =f"out_{time_util.get_timestamp()}.csv"
+    out_path = os.path.join("out", file_name)
     with open(out_path, "w") as f:
         f.write(f"{CSV_HEADER}\n")
         f.writelines(lines)

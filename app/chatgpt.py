@@ -45,3 +45,18 @@ def get_chatgpt_4o_response(prompt, image_urls):
                 raise Exception
 
     return response.choices[0].message.content
+
+
+def get_chatgpt_5_response(prompt: str, image_urls: list[str]) -> str:
+    content = [{"type": "input_text", "text": prompt}]
+    content.extend({"type": "input_image", "image_url": image_url} for image_url in image_urls)
+    try:
+        response = client.responses.create(
+            model=Model.GPT_5,
+            input=[{"role": "user", "content": content}]
+        )
+    except BadRequestError as e:
+        logger.log_response(f"ChatGPT failed to get a response: {e}")
+        raise
+    else:
+        return response.output_text

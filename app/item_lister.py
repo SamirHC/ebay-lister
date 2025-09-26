@@ -3,7 +3,7 @@ import os
 
 from app import chatgpt
 from app.ebay_categories import get_ebay_categories_df, get_all_specifics
-from app import ebay_item
+from app.ebay_item import EbayItemBuilder
 from app import image_handler
 from app.utils import logger
 from app.utils import time_util
@@ -157,7 +157,7 @@ def get_csv_line(image_urls):
     item_specifics = image_info[2:]
 
     item = (
-        ebay_item.EbayItemBuilder(image_urls)
+        EbayItemBuilder(image_urls)
         .set_title(title)
         .set_description(title)
         .set_category_id(category_id)
@@ -170,7 +170,7 @@ def get_csv_line(image_urls):
 
 
 def query_image_info(image_urls):
-    text = chatgpt.get_chatgpt_4o_response(get_prompt(), image_urls)
+    text = chatgpt.get_chatgpt_5_response(get_prompt(), image_urls)
     logger.log_response(f"ChatGPT output: {text}")
     return text
 

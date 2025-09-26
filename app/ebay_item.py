@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 
-from app import ebay_categories
+from app.data import ebay_categories
 
 
 @dataclass

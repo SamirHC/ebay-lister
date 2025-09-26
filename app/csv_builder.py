@@ -4,7 +4,7 @@ from pathlib import Path
 
 from app import chatgpt
 from app.data import ebay_images
-from app.ebay_categories import get_ebay_categories_df, get_all_specifics
+from app.data.ebay_categories import get_ebay_categories_df, get_all_specifics
 from app.ebay_item import EbayItemBuilder
 from app import s3
 from app.utils import logger

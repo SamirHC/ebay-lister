@@ -3,8 +3,9 @@ from typing import Any, Generator
 
 import natsort
 
+from app.utils.dirs import IMAGE_DIR
 
-IMAGE_DIR = Path("images").resolve()
+
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp"}
 
 def is_image_path(path: Path) -> bool:

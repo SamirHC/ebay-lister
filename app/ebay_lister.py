@@ -1,10 +1,14 @@
 import time
 
 from app import csv_builder
+from app.utils import dirs
 from app.utils import logger
 
 
 def run():
+    dirs.setup_directories()
+    logger.setup_logging()
+
     logger.log_response("="*80)
     logger.log_response("Starting Listing Tool...")
     logger.log_response("")

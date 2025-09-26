@@ -2,9 +2,7 @@ import logging
 from pathlib import Path
 
 from app.utils import time_util
-
-
-LOG_DIR = Path("out") / "log"
+from app.utils.dirs import LOG_DIR
 
 
 def get_log_file_name() -> Path:
@@ -12,11 +10,12 @@ def get_log_file_name() -> Path:
     return LOG_DIR / file_name
 
 
-logging.basicConfig(
-    filename=get_log_file_name(),
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
+def setup_logging():
+    logging.basicConfig(
+        filename=get_log_file_name(),
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
 
 
 def log_response(response: str):

@@ -1,10 +1,10 @@
 from itertools import chain
-import os
+from pathlib import Path
 
 import pandas as pd
 
 
-EBAY_CATEGORIES_PATH = os.path.join("data", "Ebay Categories & Specifics.csv")
+EBAY_CATEGORIES_PATH = Path("data", "Ebay Categories & Specifics.csv")
 
 
 def get_ebay_categories_df() -> pd.DataFrame:

@@ -1,15 +1,15 @@
 import logging
-import os
+from pathlib import Path
 
 from app.utils import time_util
 
 
-LOG_DIR = os.path.join("out", "log")
+LOG_DIR = Path("out") / "log"
 
 
-def get_log_file_name():
+def get_log_file_name() -> Path:
     file_name = f"{time_util.get_timestamp()}.txt"
-    return os.path.join(LOG_DIR, file_name)
+    return LOG_DIR / file_name
 
 
 logging.basicConfig(
@@ -19,6 +19,6 @@ logging.basicConfig(
 )
 
 
-def log_response(response):
+def log_response(response: str):
     logging.info(response)
     print(response)

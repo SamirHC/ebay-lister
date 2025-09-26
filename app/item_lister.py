@@ -40,6 +40,9 @@ def get_prompt():
     )
 
 
+PROMPT = get_prompt()
+
+
 def get_image_urls_for_item(subdir: Path) -> list[str]:
     return [s3.upload_image(fp)
             for fp in ebay_images.iter_item_dir_image_paths(subdir)]
@@ -57,7 +60,7 @@ def get_image_urls() -> dict[str, str]:
     return image_urls
 
 
-def get_csv_lines(image_urls: dict[str, list[str]]):
+def get_csv_lines(image_urls: dict[str, list[str]]) -> list[str]:
     NUM_SUBDIRS = len(image_urls)
     res = []
 
@@ -76,7 +79,7 @@ def get_csv_lines(image_urls: dict[str, list[str]]):
     return [r for _, r in res if r is not None]
 
 
-def get_csv_lines_parallel(image_urls: dict[str, list[str]]):
+def get_csv_lines_parallel(image_urls: dict[str, list[str]]) -> list[str]:
     NUM_SUBDIRS = len(image_urls)
     res = []
 
@@ -96,7 +99,7 @@ def get_csv_lines_parallel(image_urls: dict[str, list[str]]):
     return [r for _, r in res if r is not None]
 
 
-def try_get_csv_line(s: str, subdir_image_urls: list[str]):
+def try_get_csv_line(s: str, subdir_image_urls: list[str]) -> str:
     line = None
     count = 0
     while line is None and count < MAX_ATTEMPTS:
@@ -114,7 +117,7 @@ def try_get_csv_line(s: str, subdir_image_urls: list[str]):
     return line
 
 
-def get_csv_line(image_urls):
+def get_csv_line(image_urls: list[str]) -> str:
     image_info = query_image_info(image_urls)
     if "\n" in image_info:
         raise Exception("Aborting: Detected newline.")
@@ -146,13 +149,13 @@ def get_csv_line(image_urls):
     return row
 
 
-def query_image_info(image_urls):
-    text = chatgpt.get_chatgpt_5_response(get_prompt(), image_urls)
+def query_image_info(image_urls: list[str]) -> str:
+    text = chatgpt.get_chatgpt_response(PROMPT, image_urls)
     logger.log_response(f"ChatGPT output: {text}")
     return text
 
 
-def write_items_to_csv(lines):
+def write_items_to_csv(lines: list[str]):
     CSV_HEADER = f"""
 #INFO,Version=0.0.2,Template= eBay-draft-listings-template_GB,,,,,,,,
 #INFO Action and Category ID are required fields. 1) Set Action to Draft 2) Please find the category ID for your listings here: https://pages.ebay.com/sellerinformation/news/categorychanges.html,,,,,,,,,,

@@ -175,8 +175,7 @@ def get_csv_line(image_urls):
 
 
 def query_image_info(image_urls):
-    response = chatgpt.get_chatgpt_4o_response(get_prompt(), image_urls)
-    text = response.choices[0].message.content
+    text = chatgpt.get_chatgpt_4o_response(get_prompt(), image_urls)
     logger.log_response(f"ChatGPT output: {text}")
     return text
 

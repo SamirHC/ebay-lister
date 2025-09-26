@@ -2,7 +2,7 @@ from dotenv import dotenv_values
 from openai import OpenAI, BadRequestError
 
 from app.utils import logger
-from app.model import Model, SystemMessage
+from app.model import Model
 
 
 config = dotenv_values(".env")
@@ -12,14 +12,11 @@ MAX_TOKENS = 300
 MAX_ATTEMPTS = 10  # No cost associated with BadRequestErrors
 
 
-def get_chatgpt_4o_response(
-        prompt, image_urls, system_msg=SystemMessage.DEFAULT
-):
-
+def get_chatgpt_4o_response(prompt, image_urls):
     image_url_data = map(
         lambda url: {
             "type": "image_url",
-            "image_url": {"url": url,},
+            "image_url": {"url": url},
         },
         image_urls
     )
@@ -34,11 +31,8 @@ def get_chatgpt_4o_response(
             response = client.chat.completions.create(
                 model=Model.GPT_4_O,
                 messages=[
-                    {"role": "system", "content": system_msg},
-                    {
-                        "role": "user",
-                        "content": content_data,
-                    },
+                    {"role": "system", "content":  "You are ChatGPT, a large language model."},
+                    {"role": "user", "content": content_data},
                 ],
                 max_tokens=MAX_TOKENS,
             )
@@ -49,5 +43,5 @@ def get_chatgpt_4o_response(
             else:
                 logger.log_response(f"Maximum attempts made ({count}). Aborting ChatGPT.")
                 raise Exception
-    
-    return response
+
+    return response.choices[0].message.content

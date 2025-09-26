@@ -1,10 +1,12 @@
-import os
-import image_handler
-import chatgpt
-import model
-import ebay_item
-import logger
 import concurrent.futures
+import os
+
+import chatgpt
+
+from app import image_handler
+from app import model
+from app import ebay_item
+from app.utils import logger
 
 
 MAX_ATTEMPTS = 5

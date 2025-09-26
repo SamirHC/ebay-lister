@@ -1,10 +1,13 @@
+import os
+
 import base64
 import boto3
 from botocore.client import Config
-import os
-import urllib.parse
-import logger
 from dotenv import dotenv_values
+import urllib.parse
+
+from app.utils import logger
+
 
 config = dotenv_values(".env")
 

@@ -1,7 +1,8 @@
-from openai import OpenAI, BadRequestError
 from dotenv import dotenv_values
-from model import Model, SystemMessage
-import logger
+from openai import OpenAI, BadRequestError
+
+from app.utils import logger
+from app.model import Model, SystemMessage
 
 
 config = dotenv_values(".env")

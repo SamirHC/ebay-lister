@@ -1,3 +1,6 @@
+import os
+
+
 # Models
 class Model:
     GPT_4_O = "gpt-4o"
@@ -11,10 +14,8 @@ class SystemMessage:
 
 class Prompts:
     def get_ebay_csv():
-        import os
-
         with open(
-            os.path.join(os.getcwd(), "src", "Ebay Categories & Specifics.csv"), "r"
+            os.path.join("data", "Ebay Categories & Specifics.csv"), "r"
         ) as f:
             lines = f.readlines()
         return "".join(lines)

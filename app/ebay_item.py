@@ -1,10 +1,11 @@
 from __future__ import annotations
-import os
 import csv
+import os
+
 
 id_to_specifics = {}
 
-with open(os.path.join("src", "Ebay Categories & Specifics.csv"), mode="r") as f:
+with open(os.path.join("data", "Ebay Categories & Specifics.csv"), mode="r") as f:
     csv_reader = csv.reader(f)
     next(csv_reader)  # Skip header
     for row in csv_reader:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 import csv
+from dataclasses import dataclass, field
 import os
 
 
@@ -13,49 +14,31 @@ with open(os.path.join("data", "Ebay Categories & Specifics.csv"), mode="r") as 
         specifics = [x.strip() for x in row[2].split(",")]
         id_to_specifics[id] = specifics
 
-all_specifics = list(
-    set(item for sublist in id_to_specifics.values() for item in sublist)
-)
+all_specifics = set(item for sublist in id_to_specifics.values() for item in sublist)
 
 
+@dataclass
 class EbayItem:
-    def __init__(
-        self,
-        action="Draft",  # Default
-        SKU="",  # Manual
-        category_id="",
-        title="",
-        UPC="",  # Leave Blank
-        price="",  # Leave Blank
-        quantity="",  # Default
-        image_URL="",
-        condition_id="USED",  # Manual
-        description="",
-        format="Auction",  # Defualt
-        duration=7,  # Default
-        start_price="11.99",  # Default
-        item_specifics=None,
-    ):
-        self.action = action
-        self.SKU = SKU
-        self.category_id = category_id
-        self.title = title
-        self.UPC = UPC
-        self.price = price
-        self.quantity = quantity
-        self.image_URL = image_URL
-        self.condition_id = condition_id
-        self.description = description
-        self.format = format
-        self.duration = duration
-        self.start_price = start_price
-        self.item_specifics = item_specifics
+    action: str = "Draft"  # Default
+    SKU: str = ""  # Manual
+    category_id: str = ""
+    title: str = ""
+    UPC: str = ""  # Leave Blank
+    price: str = ""  # Leave Blank
+    quantity: str = ""  # Default
+    image_URL: str = ""
+    condition_id: str = "USED"  # Manual
+    description: str = ""
+    format: str = "Auction"  # Defualt
+    duration: int = 7  # Default
+    start_price: str = "11.99"  # Default
+    item_specifics: list[str] = field(default_factory=list)
 
     def to_csv_row(self):
         return ",".join(
             map(
                 str,
-                [
+                (
                     self.action,
                     self.SKU,
                     self.category_id,
@@ -69,8 +52,8 @@ class EbayItem:
                     self.format,
                     self.duration,
                     self.start_price,
-                    self.item_specifics,
-                ],
+                    ",".join(self.item_specifics),
+                ),
             )
         )
 
@@ -82,7 +65,7 @@ class EbayItemBuilder:
         self.title = ""
         self.description = ""
         self.category_id = ""
-        self.item_specifics = None
+        self.item_specifics = []
 
     def set_title(self, title: str) -> EbayItemBuilder:
         self.title = title
@@ -117,7 +100,7 @@ class EbayItemBuilder:
 
         self.check_title_for_category("Brand", item_specifics, mapped)
 
-        self.item_specifics = ",".join(mapped[s] for s in all_specifics)
+        self.item_specifics.extend(mapped[s] for s in all_specifics)
         return self
     
     def check_title_for_category(self, category: str, item_specifics, mapped):

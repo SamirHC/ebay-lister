@@ -180,7 +180,8 @@ def query_image_info(image_urls):
     return text
 
 
-CSV_HEADER = f"""
+def write_items_to_csv(lines):
+    CSV_HEADER = f"""
 #INFO,Version=0.0.2,Template= eBay-draft-listings-template_GB,,,,,,,,
 #INFO Action and Category ID are required fields. 1) Set Action to Draft 2) Please find the category ID for your listings here: https://pages.ebay.com/sellerinformation/news/categorychanges.html,,,,,,,,,,
 #INFO After you've successfully uploaded your draft from the Seller Hub Reports tab, complete your drafts to active listings here: https://www.ebay.co.uk/sh/lst/drafts",,,,,,,,,,
@@ -188,8 +189,6 @@ CSV_HEADER = f"""
 Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8),Custom label (SKU),Category ID,Title,UPC,Price,Quantity,Item photo URL,Condition ID,Description,Format,Duration,Start price,{",".join([f"C:{s}" for s in ebay_item.all_specifics])}
 """
 
-
-def write_items_to_csv(lines):
     file_name =f"out_{time_util.get_timestamp()}.csv"
     out_path = os.path.join("out", file_name)
     with open(out_path, "w") as f:

@@ -1,11 +1,10 @@
 import concurrent.futures
 import os
 
-import chatgpt
-
+from app import chatgpt
+from app import ebay_item
 from app import image_handler
 from app import model
-from app import ebay_item
 from app.utils import logger
 
 

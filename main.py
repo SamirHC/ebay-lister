@@ -1,4 +1,4 @@
-from app.app import run
+from app.ebay_lister import run
 
 
 if __name__ == "__main__":

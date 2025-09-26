@@ -1,18 +1,18 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import os
+from pathlib import Path
 
 from app import chatgpt
+from app.data import ebay_images
 from app.ebay_categories import get_ebay_categories_df, get_all_specifics
 from app.ebay_item import EbayItemBuilder
-from app import image_handler
+from app import s3
 from app.utils import logger
 from app.utils import time_util
 
 
 MAX_ATTEMPTS = 5
-PARALLEL = True
 MAX_WORKERS = 20
-
 
 
 def get_prompt():
@@ -40,42 +40,19 @@ def get_prompt():
     )
 
 
-def main():
-    subdirs = get_subdirs()
+def get_image_urls_for_item(subdir: Path) -> list[str]:
+    return [s3.upload_image(fp)
+            for fp in ebay_images.iter_item_dir_image_paths(subdir)]
 
-    logger.log_response("Started uploading images.")
 
+def get_image_urls() -> dict[str, str]:
     image_urls = {}
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        future_to_subdir = {executor.submit(get_image_urls, s): s for s in subdirs}
+        future_to_subdir = {executor.submit(get_image_urls_for_item, s): s
+                            for s in ebay_images.iter_item_dirs()}
         for future in as_completed(future_to_subdir):
             s = future_to_subdir[future]
             image_urls[s] = future.result()
-
-    logger.log_response("Finished uploading images.")
-    logger.log_response("")
-
-    csv_line_getter = get_csv_lines_parallel if PARALLEL else get_csv_lines
-    lines = csv_line_getter(image_urls)
-
-    write_items_to_csv(lines)
-
-
-def get_subdirs():
-    return [
-        entry
-        for entry in os.listdir(image_handler.IMAGE_DIR)
-        if os.path.isdir(os.path.join(image_handler.IMAGE_DIR, entry))
-    ]
-
-
-def get_image_urls(subdir):
-    abs_path = os.path.join(image_handler.IMAGE_DIR, subdir)
-
-    image_urls = []
-    for file in sorted(filter(image_handler.is_image_path, os.listdir(abs_path))):
-        image_handler.upload_image(subdir, file)
-        image_urls.append(image_handler.get_public_url(subdir, file))
 
     return image_urls
 
@@ -189,3 +166,7 @@ Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8),Custom label (SK
     with open(out_path, "w") as f:
         f.write(f"{CSV_HEADER}\n")
         f.writelines(lines)
+
+
+if __name__ == "__main__":
+    print(get_image_urls_for_item(Path("images/1")))

@@ -3,3 +3,4 @@ python-dotenv
 openai
 pytest
 pandas
+natsort

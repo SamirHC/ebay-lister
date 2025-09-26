@@ -5,4 +5,4 @@ build-backend = "hatchling.build"
 [project]
 name = "app"
 version = "2025.09.26.1215"
-dependencies = ["boto3", "python-dotenv", "openai", "pytest", "pandas"]
+dependencies = ["boto3", "python-dotenv", "openai", "pytest", "pandas", "natsort"]

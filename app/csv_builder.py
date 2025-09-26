@@ -1,11 +1,12 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import json
 import os
 from pathlib import Path
 
 from app import chatgpt
 from app.data import ebay_images
 from app.data.ebay_categories import get_ebay_categories_df, get_all_specifics
-from app.ebay_item import EbayItemBuilder
+from app.ebay_item import EbayItemBuilder, EbayItem
 from app import s3
 from app.utils import logger
 from app.utils import time_util
@@ -15,32 +16,44 @@ MAX_ATTEMPTS = 5
 MAX_WORKERS = 20
 
 
-def get_prompt():
-    BASE_PROMPT = """
-    DO NOT USE NEW LINES ANYWHERE IN YOUR ANSWER.
-    WRITE AN EBAY UK TITLE FOR THIS ITEM. Take into account what ebay uk 
-    category the item is and therefore INCLUDE ANY REQUIRED ITEM SPECIFICS 
-    for that category IN THE TITLE. You must make sure that the title does 
-    not exceed 80 characters. Refrain from saying what country the item is 
-    made in. DO NOT INCLUDE COMMAS IN THE TITLE. Then on a new line, tell me
-    the ID that best corresponds to the images provided by using the csv 
-    file, as well as filling in the item specific information. 
-    GIVE THE ANSWERS ONLY SEPARATED BY COMMAS AND WITHOUT SPEECH MARKS. 
-    Make sure that the order of the information is preserved:
-    Title, ID, Item specifics...
-    WRITE THE HEADING OF THE ITEM SPECIFIC IN YOUR ANSWER.
+def get_json_prompt():
+    return f"""
+        You are a clothes seller on eBay. Given the images, produce information 
+        for an SEO optimised listing, taking into account what eBay UK category 
+        the item is by using the table provided. INCLUDE ALL REQUIRED ITEM 
+        SPECIFICS for that category IN THE TITLE.
+        You must make sure that the title does not exceed 80 characters. 
+        Refrain from saying what country the item is made in.
+
+        Respond in raw JSON for parsing with Python json.loads:
+        {{
+            "title": str,
+            "category_id": int,
+            "item_specifics": {{
+                "<item specific name>": str,
+                ...
+            }}
+        }}
+
+        For example, given images with the title:
+        "M&S Collection womens pink floral blouse size 14 long sleeve top"
+        An appropriate output could be:
+        {{
+            "title": "M&S Collection womens pink floral blouse size 14 long sleeve top",
+            "category_id: 53159,
+            "item_specifics": {{
+                "Brand": "M&S Collection",
+                "Size": "14",
+                "Type": "Blouse",
+                "Colour": "Pink",
+                "Department": "Women",
+                "Sleeve Length": "Long Sleeve"
+            }}
+        }}
+
+        Here is the item specifics and category id table:
+        {get_ebay_categories_df().to_string()}
     """
-    EXAMPLE = """
-    For example:
-    Brand, Adidas, Size, 30, Colour, Brown, Fit, Regular, Sleeve Length, Long Sleeve
-    """
-
-    return "\n".join(
-        (BASE_PROMPT, EXAMPLE, "", get_ebay_categories_df().to_string())
-    )
-
-
-PROMPT = get_prompt()
 
 
 def get_image_urls_for_item(subdir: Path) -> list[str]:
@@ -60,31 +73,12 @@ def get_image_urls() -> dict[str, str]:
     return image_urls
 
 
-def get_csv_lines(image_urls: dict[str, list[str]]) -> list[str]:
-    NUM_SUBDIRS = len(image_urls)
-    res = []
-
-    for i, s in enumerate(image_urls):
-        logger.log_response(
-            f"Progress:  {i}/{NUM_SUBDIRS} ({round(100 * i/NUM_SUBDIRS)}%)"
-        )
-        res.append((s, try_get_csv_line(s, image_urls.get(s))))
-    res.sort()
-
-    logger.log_response("")
-    logger.log_response(f"Progress: {NUM_SUBDIRS}/{NUM_SUBDIRS} (100%)")
-    logger.log_response(f"Failed jobs: {[s for s,r in res if r is None]}")
-    logger.log_response("")
-
-    return [r for _, r in res if r is not None]
-
-
-def get_csv_lines_parallel(image_urls: dict[str, list[str]]) -> list[str]:
+def get_ebay_items(image_urls: dict[str, list[str]]) -> list[EbayItem]:
     NUM_SUBDIRS = len(image_urls)
     res = []
 
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        future_to_subdir = {executor.submit(try_get_csv_line, s, urls): s for s, urls in image_urls.items()}
+        future_to_subdir = {executor.submit(try_get_ebay_item, s, urls): s for s, urls in image_urls.items()}
         for future in as_completed(future_to_subdir):
             s = future_to_subdir[future]
             res.append((s, future.result()))
@@ -99,13 +93,13 @@ def get_csv_lines_parallel(image_urls: dict[str, list[str]]) -> list[str]:
     return [r for _, r in res if r is not None]
 
 
-def try_get_csv_line(s: str, subdir_image_urls: list[str]) -> str:
-    line = None
+def try_get_ebay_item(s: str, subdir_image_urls: list[str]) -> EbayItem:
+    ebay_item = None
     count = 0
-    while line is None and count < MAX_ATTEMPTS:
+    while ebay_item is None and count < MAX_ATTEMPTS:
         count += 1
         try:
-            line = get_csv_line(subdir_image_urls)
+            ebay_item = get_ebay_csv_item_json(subdir_image_urls)
         except Exception as e:
             logger.log_response(
                 f"Something went wrong when getting the csv line for item {s}: {e}"
@@ -114,48 +108,34 @@ def try_get_csv_line(s: str, subdir_image_urls: list[str]) -> str:
                 logger.log_response(f"Trying again (attempt {count}) for item {s}")
             else:
                 logger.log_response(f"Maximum attempts made ({count}) for item {s}")
-    return line
+    return ebay_item
 
 
-def get_csv_line(image_urls: list[str]) -> str:
-    image_info = query_image_info(image_urls)
-    if "\n" in image_info:
-        raise Exception("Aborting: Detected newline.")
-    elif image_info[0] == '"':
-        raise Exception("Aborting: Detected starting speech marks.")
-    image_info = [item.strip() for item in image_info.split(",")]
-
-    title = image_info[0]
+def get_ebay_csv_item_json(image_urls: list[str]) -> EbayItem:
+    image_info = chatgpt.get_chatgpt_response(get_json_prompt(), image_urls)
+    logger.log_response(f"ChatGPT output: {image_info}")
 
     try:
-        category_id = int(image_info[1])
+        data = json.loads(image_info)
     except:
-        raise Exception(
-            "Aborting: Non-integer category ID (Possibly due to comma in title)"
-        )
+        raise Exception(f"ChatGPT output is not json.loads compatible:\n{image_info}")
 
-    item_specifics = image_info[2:]
+    try:
+        assert isinstance(data["category_id"], int)
+    except:
+        raise Exception("Non-int category_id (Comma in title?)")
 
-    item = (
+    return (
         EbayItemBuilder(image_urls)
-        .set_title(title)
-        .set_description(title)
-        .set_category_id(category_id)
-        .set_item_specifics(item_specifics)
+        .set_title(data["title"])
+        .set_description(data["title"])
+        .set_category_id(data["category_id"])
+        .set_item_specifics([x for item in data["item_specifics"].items() for x in item])
         .build()
     )  # May raise exception if item_specifics aren't fulfilled
 
-    row = f"{item.to_csv_row()}\n"
-    return row
 
-
-def query_image_info(image_urls: list[str]) -> str:
-    text = chatgpt.get_chatgpt_response(PROMPT, image_urls)
-    logger.log_response(f"ChatGPT output: {text}")
-    return text
-
-
-def write_items_to_csv(lines: list[str]):
+def write_items_to_csv(ebay_items: list[EbayItem]):
     CSV_HEADER = f"""
 #INFO,Version=0.0.2,Template= eBay-draft-listings-template_GB,,,,,,,,
 #INFO Action and Category ID are required fields. 1) Set Action to Draft 2) Please find the category ID for your listings here: https://pages.ebay.com/sellerinformation/news/categorychanges.html,,,,,,,,,,
@@ -163,12 +143,11 @@ def write_items_to_csv(lines: list[str]):
 #INFO,,,,,,,,,,
 Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8),Custom label (SKU),Category ID,Title,UPC,Price,Quantity,Item photo URL,Condition ID,Description,Format,Duration,Start price,{",".join(f"C:{s}" for s in get_all_specifics())}
 """
-
     file_name =f"out_{time_util.get_timestamp()}.csv"
     out_path = os.path.join("out", file_name)
     with open(out_path, "w") as f:
         f.write(f"{CSV_HEADER}\n")
-        f.writelines(lines)
+        f.writelines(f"{item.to_csv_row()}\n" for item in ebay_items)
 
 
 if __name__ == "__main__":

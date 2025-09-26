@@ -1,5 +1,5 @@
-from app.ebay_lister import run
+from app import ebay_lister
 
 
 if __name__ == "__main__":
-    run()
+    ebay_lister.run()

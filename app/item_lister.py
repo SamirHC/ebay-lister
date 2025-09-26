@@ -5,13 +5,44 @@ import os
 from app import chatgpt
 from app import ebay_item
 from app import image_handler
-from app import model
 from app.utils import logger
 
 
 MAX_ATTEMPTS = 5
 PARALLEL = True
 MAX_WORKERS = 20
+
+
+def get_ebay_categories_and_specifics_csv():
+    file_path = os.path.join("data", "Ebay Categories & Specifics.csv")
+    with open(file_path, "r") as f:
+        lines = f.readlines()
+    return "".join(lines)
+
+
+def get_prompt():
+    BASE_PROMPT = """
+    DO NOT USE NEW LINES ANYWHERE IN YOUR ANSWER.
+    WRITE AN EBAY UK TITLE FOR THIS ITEM. Take into account what ebay uk 
+    category the item is and therefore INCLUDE ANY REQUIRED ITEM SPECIFICS 
+    for that category IN THE TITLE. You must make sure that the title does 
+    not exceed 80 characters. Refrain from saying what country the item is 
+    made in. DO NOT INCLUDE COMMAS IN THE TITLE. Then on a new line, tell me
+    the ID that best corresponds to the images provided by using the csv 
+    file, as well as filling in the item specific information. 
+    GIVE THE ANSWERS ONLY SEPARATED BY COMMAS AND WITHOUT SPEECH MARKS. 
+    Make sure that the order of the information is preserved:
+    Title, ID, Item specifics...
+    WRITE THE HEADING OF THE ITEM SPECIFIC IN YOUR ANSWER.
+    """
+    EXAMPLE = """
+    For example:
+    Brand, Adidas, Size, 30, Colour, Brown, Fit, Regular, Sleeve Length, Long Sleeve
+    """
+
+    return "\n".join(
+        (BASE_PROMPT, EXAMPLE, "", get_ebay_categories_and_specifics_csv())
+    )
 
 
 def main():
@@ -144,7 +175,7 @@ def get_csv_line(image_urls):
 
 
 def query_image_info(image_urls):
-    response = chatgpt.get_chatgpt_4o_response(model.Prompts.PROMPT, image_urls)
+    response = chatgpt.get_chatgpt_4o_response(get_prompt(), image_urls)
     text = response.choices[0].message.content
     logger.log_response(f"ChatGPT output: {text}")
     return text

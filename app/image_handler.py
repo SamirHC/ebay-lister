@@ -1,10 +1,10 @@
 import os
+import urllib.parse
 
 import base64
 import boto3
 from botocore.client import Config
 from dotenv import load_dotenv
-import urllib.parse
 
 from app.utils import logger
 

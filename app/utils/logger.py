@@ -1,6 +1,6 @@
+from datetime import datetime
 import logging
 import os
-from datetime import datetime
 
 
 LOG_DIR = os.path.join("out", "log")

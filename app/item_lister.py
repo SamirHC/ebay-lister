@@ -1,4 +1,5 @@
-import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
 import os
 
 from app import chatgpt
@@ -19,9 +20,9 @@ def main():
     logger.log_response("Started uploading images.")
 
     image_urls = {}
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         future_to_subdir = {executor.submit(get_image_urls, s): s for s in subdirs}
-        for future in concurrent.futures.as_completed(future_to_subdir):
+        for future in as_completed(future_to_subdir):
             s = future_to_subdir[future]
             image_urls[s] = future.result()
 
@@ -76,9 +77,9 @@ def get_csv_lines_parallel(image_urls: dict[str, list[str]]):
     NUM_SUBDIRS = len(image_urls)
     res = []
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         future_to_subdir = {executor.submit(try_get_csv_line, s, urls): s for s, urls in image_urls.items()}
-        for future in concurrent.futures.as_completed(future_to_subdir):
+        for future in as_completed(future_to_subdir):
             s = future_to_subdir[future]
             res.append((s, future.result()))
     
@@ -159,6 +160,8 @@ Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8),Custom label (SK
 
 
 def write_items_to_csv(lines):
-    with open("out.csv", "w") as f:
+    time_str = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+    out_path = os.path.join("out", f"out_{time_str}.csv")
+    with open(out_path, "w") as f:
         f.write(f"{CSV_HEADER}\n")
         f.writelines(lines)

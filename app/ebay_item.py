@@ -1,27 +1,14 @@
 from __future__ import annotations
-import csv
 from dataclasses import dataclass, field
-import os
 
-
-id_to_specifics = {}
-
-with open(os.path.join("data", "Ebay Categories & Specifics.csv"), mode="r") as f:
-    csv_reader = csv.reader(f)
-    next(csv_reader)  # Skip header
-    for row in csv_reader:
-        id = str(row[1])
-        specifics = [x.strip() for x in row[2].split(",")]
-        id_to_specifics[id] = specifics
-
-all_specifics = set(item for sublist in id_to_specifics.values() for item in sublist)
+from app import ebay_categories
 
 
 @dataclass
 class EbayItem:
     action: str = "Draft"  # Default
     SKU: str = ""  # Manual
-    category_id: str = ""
+    category_id: int = 0
     title: str = ""
     UPC: str = ""  # Leave Blank
     price: str = ""  # Leave Blank
@@ -64,7 +51,7 @@ class EbayItemBuilder:
 
         self.title = ""
         self.description = ""
-        self.category_id = ""
+        self.category_id = 0
         self.item_specifics = []
 
     def set_title(self, title: str) -> EbayItemBuilder:
@@ -75,11 +62,12 @@ class EbayItemBuilder:
         self.description = description
         return self
 
-    def set_category_id(self, category_id: str) -> EbayItemBuilder:
+    def set_category_id(self, category_id: int) -> EbayItemBuilder:
         self.category_id = category_id
         return self
 
     def set_item_specifics(self, item_specifics: list[str]) -> EbayItemBuilder:
+        all_specifics = ebay_categories.get_all_specifics()
         mapped = {s: "" for s in all_specifics}
 
         while item_specifics:
@@ -94,7 +82,7 @@ class EbayItemBuilder:
                     raise Exception(f"UNKNOWN CATEGORY: Could not parse {k}")
             mapped[k] = v
 
-        for s in id_to_specifics[self.category_id]:
+        for s in ebay_categories.get_specifics_from_id(self.category_id):
             if not mapped[s]:
                 raise Exception(f"{s} is not provided.")
 

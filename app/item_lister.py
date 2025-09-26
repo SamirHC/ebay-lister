@@ -2,6 +2,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import os
 
 from app import chatgpt
+from app.ebay_categories import get_ebay_categories_df, get_all_specifics
 from app import ebay_item
 from app import image_handler
 from app.utils import logger
@@ -12,12 +13,6 @@ MAX_ATTEMPTS = 5
 PARALLEL = True
 MAX_WORKERS = 20
 
-
-def get_ebay_categories_and_specifics_csv():
-    file_path = os.path.join("data", "Ebay Categories & Specifics.csv")
-    with open(file_path, "r") as f:
-        lines = f.readlines()
-    return "".join(lines)
 
 
 def get_prompt():
@@ -41,7 +36,7 @@ def get_prompt():
     """
 
     return "\n".join(
-        (BASE_PROMPT, EXAMPLE, "", get_ebay_categories_and_specifics_csv())
+        (BASE_PROMPT, EXAMPLE, "", get_ebay_categories_df().to_string())
     )
 
 
@@ -153,7 +148,7 @@ def get_csv_line(image_urls):
     title = image_info[0]
 
     try:
-        category_id = str(int(image_info[1]))
+        category_id = int(image_info[1])
     except:
         raise Exception(
             "Aborting: Non-integer category ID (Possibly due to comma in title)"
@@ -186,7 +181,7 @@ def write_items_to_csv(lines):
 #INFO Action and Category ID are required fields. 1) Set Action to Draft 2) Please find the category ID for your listings here: https://pages.ebay.com/sellerinformation/news/categorychanges.html,,,,,,,,,,
 #INFO After you've successfully uploaded your draft from the Seller Hub Reports tab, complete your drafts to active listings here: https://www.ebay.co.uk/sh/lst/drafts",,,,,,,,,,
 #INFO,,,,,,,,,,
-Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8),Custom label (SKU),Category ID,Title,UPC,Price,Quantity,Item photo URL,Condition ID,Description,Format,Duration,Start price,{",".join([f"C:{s}" for s in ebay_item.all_specifics])}
+Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8),Custom label (SKU),Category ID,Title,UPC,Price,Quantity,Item photo URL,Condition ID,Description,Format,Duration,Start price,{",".join(f"C:{s}" for s in get_all_specifics())}
 """
 
     file_name =f"out_{time_util.get_timestamp()}.csv"

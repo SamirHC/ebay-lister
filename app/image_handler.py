@@ -3,16 +3,17 @@ import os
 import base64
 import boto3
 from botocore.client import Config
-from dotenv import dotenv_values
+from dotenv import load_dotenv
 import urllib.parse
 
 from app.utils import logger
 
 
-config = dotenv_values(".env")
+load_dotenv()
 
-BUCKET_NAME = config["AWS_BUCKET_NAME"]
-REGION_NAME = config["AWS_REGION_NAME"]
+
+BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
+REGION_NAME = os.getenv("AWS_REGION_NAME")
 
 IMAGE_DIR = os.path.join(os.getcwd(), "images")
 
